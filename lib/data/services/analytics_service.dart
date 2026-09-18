@@ -2,17 +2,28 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 
 class AnalyticsService {
-  final FirebaseAnalytics _analytics;
+  final FirebaseAnalytics? _analyticsInstance;
 
   AnalyticsService({FirebaseAnalytics? analytics})
-      : _analytics = analytics ?? FirebaseAnalytics.instance;
+      : _analyticsInstance = analytics;
 
-  FirebaseAnalyticsObserver getAnalyticsObserver() =>
-      FirebaseAnalyticsObserver(analytics: _analytics);
+  FirebaseAnalytics? get _analytics {
+    if (_analyticsInstance != null) return _analyticsInstance;
+    try {
+      return FirebaseAnalytics.instance;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  FirebaseAnalyticsObserver? getAnalyticsObserver() {
+    final analytics = _analytics;
+    return analytics != null ? FirebaseAnalyticsObserver(analytics: analytics) : null;
+  }
 
   Future<void> setUserId(String? userId) async {
     try {
-      await _analytics.setUserId(id: userId);
+      await _analytics?.setUserId(id: userId);
     } catch (e) {
       debugPrint('Analytics setUserId error: $e');
     }
@@ -20,7 +31,7 @@ class AnalyticsService {
 
   Future<void> logLogin({String loginMethod = 'email_password'}) async {
     try {
-      await _analytics.logLogin(loginMethod: loginMethod);
+      await _analytics?.logLogin(loginMethod: loginMethod);
     } catch (e) {
       debugPrint('Analytics logLogin error: $e');
     }
@@ -28,7 +39,7 @@ class AnalyticsService {
 
   Future<void> logSignUp({String signUpMethod = 'email_password'}) async {
     try {
-      await _analytics.logSignUp(signUpMethod: signUpMethod);
+      await _analytics?.logSignUp(signUpMethod: signUpMethod);
     } catch (e) {
       debugPrint('Analytics logSignUp error: $e');
     }
@@ -36,7 +47,7 @@ class AnalyticsService {
 
   Future<void> logNoteCreated({required String category}) async {
     try {
-      await _analytics.logEvent(
+      await _analytics?.logEvent(
         name: 'note_created',
         parameters: {'category': category},
       );
@@ -47,7 +58,7 @@ class AnalyticsService {
 
   Future<void> logNoteUpdated({required String category}) async {
     try {
-      await _analytics.logEvent(
+      await _analytics?.logEvent(
         name: 'note_updated',
         parameters: {'category': category},
       );
@@ -58,7 +69,7 @@ class AnalyticsService {
 
   Future<void> logNoteDeleted() async {
     try {
-      await _analytics.logEvent(name: 'note_deleted');
+      await _analytics?.logEvent(name: 'note_deleted');
     } catch (e) {
       debugPrint('Analytics logNoteDeleted error: $e');
     }
@@ -66,7 +77,7 @@ class AnalyticsService {
 
   Future<void> logFavoriteToggled({required bool isFavorite}) async {
     try {
-      await _analytics.logEvent(
+      await _analytics?.logEvent(
         name: 'note_favorite_toggled',
         parameters: {'is_favorite': isFavorite},
       );
