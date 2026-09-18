@@ -36,7 +36,7 @@ local.properties
 *.kt.bin
 *.kotlin_module
 
-# iOS / Xcode related
+# iOS / Xcode / CocoaPods related
 ios/Pods/
 ios/.symlinks/
 ios/Flutter/Flutter.framework
@@ -46,6 +46,7 @@ ios/Flutter/app.flx
 ios/Flutter/app.zip
 ios/Flutter/flutter_assets/
 ios/Flutter/flutter_export_environment.sh
+ios/Flutter/ephemeral/
 ios/ServiceDefinitions.json
 **/ios/Flutter/.last_build_id
 DerivedData/
@@ -54,6 +55,16 @@ DerivedData/
 *.mode2v3
 *.perspectivev3
 xcuserdata/
+**/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.resolved
+**/xcshareddata/swiftpm/
+**/xcshareddata/WorkspaceSettings.xcsettings
+*.xccheckout
+*.moved-aside
+*.ipa
+.swiftpm/
 
 # Flutter / Dart / Pub related
 **/doc/api/
