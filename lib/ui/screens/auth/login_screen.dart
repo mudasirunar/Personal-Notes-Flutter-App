@@ -218,7 +218,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                     isPassword: true,
                                     textInputAction: TextInputAction.done,
                                     errorText: _passwordError,
-                                    onSubmitted: (_) => _handleLogin(),
+                                    onSubmitted: (_) =>
+                                        FocusScope.of(context).unfocus(),
                                     onChanged: (_) {
                                       if (authProvider.errorMessage != null) {
                                         authProvider.clearError();

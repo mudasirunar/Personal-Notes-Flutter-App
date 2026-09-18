@@ -293,7 +293,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     isPassword: true,
                                     textInputAction: TextInputAction.done,
                                     errorText: _confirmPasswordError,
-                                    onSubmitted: (_) => _handleSignUp(),
+                                    onSubmitted: (_) =>
+                                        FocusScope.of(context).unfocus(),
                                     onChanged: (_) {
                                       if (authProvider.errorMessage != null) {
                                         authProvider.clearError();
