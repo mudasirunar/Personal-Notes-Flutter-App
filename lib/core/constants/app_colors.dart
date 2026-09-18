@@ -98,4 +98,7 @@ class AppColors {
 
   static Color shimmerBaseOf(BuildContext context) =>
       isDark(context) ? shimmerBaseDark : shimmerBase;
+
+  static Color errorOf(BuildContext context) =>
+      isDark(context) ? errorDark : error;
 }

@@ -8,6 +8,7 @@ import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'providers/notes_provider.dart';
 import 'ui/screens/auth/login_screen.dart';
+import 'ui/screens/notes/notes_home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -100,21 +101,7 @@ class AuthWrapper extends StatelessWidget {
     }
 
     if (authProvider.isAuthenticated) {
-      // Authenticated view placeholder until Phase 7 connects full NotesHomeScreen
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('My Notes'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.logout_rounded),
-              onPressed: () => context.read<AuthProvider>().signOut(),
-            ),
-          ],
-        ),
-        body: Center(
-          child: Text('Logged in as: ${authProvider.userEmail ?? 'User'}'),
-        ),
-      );
+      return const NotesHomeScreen();
     }
 
     return const LoginScreen();

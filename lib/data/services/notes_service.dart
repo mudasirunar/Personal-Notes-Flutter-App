@@ -3,10 +3,13 @@ import '../../core/constants/app_constants.dart';
 import '../models/note_model.dart';
 
 class NotesService {
-  final FirebaseFirestore _firestore;
+  final FirebaseFirestore? _firestoreInstance;
 
   NotesService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+      : _firestoreInstance = firestore;
+
+  FirebaseFirestore get _firestore =>
+      _firestoreInstance ?? FirebaseFirestore.instance;
 
   CollectionReference<Map<String, dynamic>> _userNotesCollection(String userId) {
     return _firestore
