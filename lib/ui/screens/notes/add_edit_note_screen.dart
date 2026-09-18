@@ -218,6 +218,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
           ],
         ),
         body: SafeArea(
+          bottom: false,
           child: Form(
             key: _formKey,
             child: Column(

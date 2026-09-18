@@ -5,6 +5,27 @@ class Validators {
     r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
   );
 
+  static String? validateFullName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Name is required';
+    }
+    return null;
+  }
+
+  static String? validateFirstName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'First name is required';
+    }
+    return null;
+  }
+
+  static String? validateLastName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Last name is required';
+    }
+    return null;
+  }
+
   static String? validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Email address is required';

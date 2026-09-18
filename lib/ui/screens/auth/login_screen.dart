@@ -16,15 +16,20 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
+
+  String? _emailError;
+  String? _passwordError;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -32,9 +37,14 @@ class _LoginScreenState extends State<LoginScreen> {
     final authProvider = context.read<AuthProvider>();
     authProvider.clearError();
 
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    setState(() {
+      _emailError = Validators.validateEmail(_emailController.text);
+      _passwordError = _passwordController.text.isEmpty
+          ? 'Password is required'
+          : null;
+    });
+
+    if (_emailError != null || _passwordError != null) return;
 
     FocusScope.of(context).unfocus();
 
@@ -47,213 +57,305 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
-
     final isDark = AppColors.isDark(context);
+    final size = MediaQuery.of(context).size;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    final accentColor = isDark
+        ? const Color(0xFF818CF8)
+        : AppColors.accent;
+    final circleSize = size.longestSide * 0.46;
 
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackgroundOf(context),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Brand Icon & Header
-                    Center(
-                      child: Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.accent : AppColors.primary,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Icon(
-                          Icons.edit_note_rounded,
-                          size: 32,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Welcome Back',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: AppColors.textPrimaryOf(context),
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Sign in to access your personal notes',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: AppColors.textSecondaryOf(context),
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
+      resizeToAvoidBottomInset: false,
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Stack(
+          children: [
+            // ── Background gradient ──
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: isDark
+                      ? [const Color(0xFF0B0D1A), const Color(0xFF111336)]
+                      : [const Color(0xFFF8FAFC), const Color(0xFFEEF0FB)],
+                ),
+              ),
+            ),
 
-                    // Error Banner if present
-                    if (authProvider.errorMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.errorLightDark : AppColors.errorLight,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: (isDark ? AppColors.errorDark : AppColors.error).withValues(alpha: 0.3),
+            // ── Decorative gradient circle (top-right) ──
+            Positioned(
+              top: -circleSize * 0.17,
+              right: -circleSize * 0.48,
+              child: Container(
+                width: circleSize,
+                height: circleSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isDark
+                        ? [
+                            accentColor.withValues(alpha: 0.9),
+                            Colors.white.withValues(alpha: 0.85),
+                          ]
+                        : [
+                            accentColor,
+                            Colors.white,
+                          ],
+                  ),
+                ),
+              ),
+            ),
+
+            // ── Scrollable content ──
+            SafeArea(
+              bottom: false,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: ClampingScrollPhysics(),
+                    ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minWidth: constraints.maxWidth,
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: Container(
+                        color: Colors.transparent,
+                        padding: EdgeInsets.only(
+                          left: 28,
+                          right: 28,
+                          top: 16,
+                          bottom: bottomInset + 32,
+                        ),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 420),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                      // ── App Icon ──
+                      Center(
+                        child: Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: accentColor,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(
+                            Icons.edit_note_rounded,
+                            size: 34,
+                            color: Colors.white,
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.error_outline_rounded,
-                              color: isDark ? AppColors.errorDark : AppColors.error,
-                              size: 20,
+                      ),
+                      const SizedBox(height: 20),
+
+                      // ── Title ──
+                      Text(
+                        'Welcome Back',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Sign in to access your personal notes',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.textSecondaryOf(context),
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+
+                      // ── Error Banner ──
+                      if (authProvider.errorMessage != null) ...[
+                        _ErrorBanner(
+                          message: authProvider.errorMessage!,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+
+                      // ── Email Field ──
+                      AppTextField(
+                        controller: _emailController,
+                        focusNode: _emailFocusNode,
+                        label: 'Email',
+                        showLabel: false,
+                        hint: 'Email',
+                        prefixIcon: Icons.mail_outlined,
+                        textInputAction: TextInputAction.next,
+                        errorText: _emailError,
+                        onSubmitted: (_) => _passwordFocusNode.requestFocus(),
+                        onChanged: (_) {
+                          if (authProvider.errorMessage != null) {
+                            authProvider.clearError();
+                          }
+                          if (_emailError != null) {
+                            setState(() => _emailError = null);
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // ── Password Field ──
+                      AppTextField(
+                        controller: _passwordController,
+                        focusNode: _passwordFocusNode,
+                        label: 'Password',
+                        showLabel: false,
+                        hint: 'Password',
+                        isPassword: true,
+                        textInputAction: TextInputAction.done,
+                        errorText: _passwordError,
+                        onSubmitted: (_) => _handleLogin(),
+                        onChanged: (_) {
+                          if (authProvider.errorMessage != null) {
+                            authProvider.clearError();
+                          }
+                          if (_passwordError != null) {
+                            setState(() => _passwordError = null);
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 8),
+
+                      // ── Forgot Password ──
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: GestureDetector(
+                          onTap: () {
+                            authProvider.clearError();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const ForgotPasswordScreen(),
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(
+                              'Forget Password?',
+                              style: TextStyle(
+                                color: accentColor,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                            const SizedBox(width: 10),
-                            Expanded(
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+
+                      // ── Sign In Button ──
+                      PrimaryButton(
+                        label: 'Sign in',
+                        isLoading: authProvider.isLoading,
+                        onPressed: _handleLogin,
+                        backgroundColor: accentColor,
+                      ),
+                      const SizedBox(height: 24),
+
+                      // ── Don't have account? Signup ──
+                      Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              "Don't Have Account? ",
+                              style: TextStyle(
+                                color: AppColors.textSecondaryOf(context),
+                                fontSize: 14,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                authProvider.clearError();
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const SignUpScreen(),
+                                  ),
+                                );
+                              },
                               child: Text(
-                                authProvider.errorMessage!,
+                                'Signup',
                                 style: TextStyle(
-                                  color: isDark ? AppColors.errorDark : AppColors.error,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
+                                  color: accentColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 20),
                     ],
-
-                    // Email Field
-                    AppTextField(
-                      controller: _emailController,
-                      label: 'Email',
-                      hint: 'name@example.com',
-                      keyboardType: TextInputType.emailAddress,
-                      prefixIcon: Icons.mail_outline_rounded,
-                      validator: Validators.validateEmail,
-                    ),
-                    const SizedBox(height: 18),
-
-                    // Password Field with Show/Hide Toggle
-                    AppTextField(
-                      controller: _passwordController,
-                      label: 'Password',
-                      hint: '••••••••',
-                      obscureText: _obscurePassword,
-                      prefixIcon: Icons.lock_outline_rounded,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Password is required';
-                        }
-                        return null;
-                      },
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
-                          color: AppColors.textSecondary,
-                          size: 20,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                      ),
-                      onSubmitted: (_) => _handleLogin(),
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Forgot Password Action
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          authProvider.clearError();
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const ForgotPasswordScreen(),
-                            ),
-                          );
-                        },
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          'Forgot password?',
-                          style: TextStyle(
-                            color: isDark ? const Color(0xFF818CF8) : AppColors.accent,
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Sign In Button
-                    PrimaryButton(
-                      label: 'Sign In',
-                      isLoading: authProvider.isLoading,
-                      onPressed: _handleLogin,
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Sign Up Link
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Text(
-                          "Don't have an account? ",
-                          style: TextStyle(
-                            color: AppColors.textSecondaryOf(context),
-                            fontSize: 14,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            authProvider.clearError();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const SignUpScreen(),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            'Sign Up',
-                            style: TextStyle(
-                              color: isDark ? const Color(0xFF818CF8) : AppColors.accent,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
+        );
+      },
+    ),
+  ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Shared error banner used by auth screens.
+// ═══════════════════════════════════════════════════════════════════════════════
+class _ErrorBanner extends StatelessWidget {
+  final String message;
+  final bool isDark;
+
+  const _ErrorBanner({required this.message, required this.isDark});
+
+  @override
+  Widget build(BuildContext context) {
+    final errorColor = isDark ? AppColors.errorDark : AppColors.error;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.errorLightDark : AppColors.errorLight,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: errorColor.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline_rounded, color: errorColor, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: errorColor,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

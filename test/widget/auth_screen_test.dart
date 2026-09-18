@@ -54,10 +54,11 @@ void main() {
       expect(find.text('Sign Up'), findsOneWidget);
     });
 
-    testWidgets('SignUpScreen renders email, password, confirm password fields', (tester) async {
+    testWidgets('SignUpScreen renders full name, email, password, confirm password fields', (tester) async {
       await tester.pumpWidget(createAuthTestWidget(const SignUpScreen()));
 
       expect(find.text('Create Account'), findsNWidgets(2)); // Title and Button
+      expect(find.text('Full Name'), findsOneWidget);
       expect(find.text('Email'), findsOneWidget);
       expect(find.text('Password'), findsOneWidget);
       expect(find.text('Confirm Password'), findsOneWidget);

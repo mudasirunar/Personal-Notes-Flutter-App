@@ -59,7 +59,15 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
 
     final filteredNotes = notesProvider.filteredNotes;
     final totalNotesCount = notesProvider.allNotes.length;
+    final displayName = authProvider.displayName;
+    final firstName = authProvider.firstName;
     final userEmail = authProvider.userEmail ?? 'User';
+
+    final greetingTitle = firstName != null && firstName.isNotEmpty
+        ? "$firstName's Notes"
+        : (displayName != null && displayName.isNotEmpty
+            ? "$displayName's Notes"
+            : 'My Notes');
 
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackgroundOf(context),
@@ -71,7 +79,7 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'My Notes',
+              greetingTitle,
               style: TextStyle(
                 color: AppColors.textPrimaryOf(context),
                 fontSize: 22,
@@ -104,6 +112,7 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
         ],
       ),
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             // Search Bar & Filter Section

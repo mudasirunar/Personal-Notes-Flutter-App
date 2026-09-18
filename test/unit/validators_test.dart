@@ -2,6 +2,28 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_notes_app/core/utils/validators.dart';
 
 void main() {
+  group('Validators - Names', () {
+    test('rejects empty, null and whitespace names', () {
+      expect(Validators.validateFullName(''), isNotNull);
+      expect(Validators.validateFullName('   '), isNotNull);
+      expect(Validators.validateFullName(null), isNotNull);
+      expect(Validators.validateFirstName(''), isNotNull);
+      expect(Validators.validateFirstName('   '), isNotNull);
+      expect(Validators.validateFirstName(null), isNotNull);
+      expect(Validators.validateLastName(''), isNotNull);
+      expect(Validators.validateLastName('   '), isNotNull);
+      expect(Validators.validateLastName(null), isNotNull);
+    });
+
+    test('accepts any non-empty name including short names', () {
+      expect(Validators.validateFullName('J'), isNull);
+      expect(Validators.validateFullName('Al'), isNull);
+      expect(Validators.validateFullName('John Doe'), isNull);
+      expect(Validators.validateFirstName('J'), isNull);
+      expect(Validators.validateLastName('D'), isNull);
+    });
+  });
+
   group('Validators - Email', () {
     test('rejects empty, null and whitespace email', () {
       expect(Validators.validateEmail(''), isNotNull);

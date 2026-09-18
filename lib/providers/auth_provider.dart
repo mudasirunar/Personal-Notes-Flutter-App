@@ -41,6 +41,12 @@ class AuthProvider extends ChangeNotifier {
   User? get user => _user;
   String? get userId => _user?.uid;
   String? get userEmail => _user?.email;
+  String? get displayName => _user?.displayName;
+  String? get firstName {
+    final name = _user?.displayName?.trim();
+    if (name == null || name.isEmpty) return null;
+    return name.split(' ').first;
+  }
   bool get isAuthenticated => _user != null;
   bool get isInitialized => _isInitialized;
   bool get isLoading => _isLoading;
@@ -56,14 +62,23 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> signUp({
     required String email,
     required String password,
+    String? firstName,
+    String? lastName,
+    String? fullName,
   }) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      final credential = await _authService.signUp(email: email, password: password);
-      _user = credential.user;
+      final credential = await _authService.signUp(
+        email: email,
+        password: password,
+        firstName: firstName,
+        lastName: lastName,
+        fullName: fullName,
+      );
+      _user = _authService.currentUser ?? credential.user;
       await _analyticsService.logSignUp();
       if (_user != null) {
         await _analyticsService.setUserId(_user!.uid);
