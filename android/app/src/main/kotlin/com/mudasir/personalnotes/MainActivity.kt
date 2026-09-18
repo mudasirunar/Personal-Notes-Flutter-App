@@ -1,4 +1,4 @@
-package com.mudasir.personal_notes_app
+package com.mudasir.personalnotes
 
 import io.flutter.embedding.android.FlutterActivity
 
