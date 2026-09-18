@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/validators.dart';
 import '../../../providers/auth_provider.dart';
@@ -101,10 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             AppColors.primaryDarker.withValues(alpha: 0.95),
                             Colors.white.withValues(alpha: 0.85),
                           ]
-                        : [
-                            AppColors.primaryDarker,
-                            Colors.white,
-                          ],
+                        : [AppColors.primaryDarker, Colors.white],
                   ),
                 ),
               ),
@@ -120,200 +118,205 @@ class _LoginScreenState extends State<LoginScreen> {
                       parent: ClampingScrollPhysics(),
                     ),
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minWidth: constraints.maxWidth,
-                        minHeight: constraints.maxHeight,
-                      ),
-                      child: Container(
-                        color: Colors.transparent,
-                        padding: EdgeInsets.only(
-                          left: 28,
-                          right: 28,
-                          top: 16,
-                          bottom: bottomInset + 32,
+                        constraints: BoxConstraints(
+                          minWidth: constraints.maxWidth,
+                          minHeight: constraints.maxHeight,
                         ),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 420),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                      // ── App Icon ──
-                      Center(
                         child: Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: primaryColor,
-                            borderRadius: BorderRadius.circular(16),
+                          color: Colors.transparent,
+                          padding: EdgeInsets.only(
+                            left: 28,
+                            right: 28,
+                            top: 16,
+                            bottom: bottomInset + 32,
                           ),
-                          child: const Icon(
-                            Icons.edit_note_rounded,
-                            size: 34,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // ── Title ──
-                      Text(
-                        'Welcome Back',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: isDark ? Colors.white : AppColors.textPrimary,
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Sign in to access your personal notes',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppColors.textSecondaryOf(context),
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-
-                      // ── Error Banner ──
-                      if (authProvider.errorMessage != null) ...[
-                        _ErrorBanner(
-                          message: authProvider.errorMessage!,
-                          isDark: isDark,
-                        ),
-                        const SizedBox(height: 20),
-                      ],
-
-                      // ── Email Field ──
-                      AppTextField(
-                        controller: _emailController,
-                        focusNode: _emailFocusNode,
-                        label: 'Email',
-                        showLabel: false,
-                        hint: 'Email',
-                        prefixIcon: Icons.mail_outlined,
-                        textInputAction: TextInputAction.next,
-                        errorText: _emailError,
-                        onSubmitted: (_) => _passwordFocusNode.requestFocus(),
-                        onChanged: (_) {
-                          if (authProvider.errorMessage != null) {
-                            authProvider.clearError();
-                          }
-                          if (_emailError != null) {
-                            setState(() => _emailError = null);
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // ── Password Field ──
-                      AppTextField(
-                        controller: _passwordController,
-                        focusNode: _passwordFocusNode,
-                        label: 'Password',
-                        showLabel: false,
-                        hint: 'Password',
-                        isPassword: true,
-                        textInputAction: TextInputAction.done,
-                        errorText: _passwordError,
-                        onSubmitted: (_) => _handleLogin(),
-                        onChanged: (_) {
-                          if (authProvider.errorMessage != null) {
-                            authProvider.clearError();
-                          }
-                          if (_passwordError != null) {
-                            setState(() => _passwordError = null);
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 8),
-
-                      // ── Forgot Password ──
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: GestureDetector(
-                          onTap: () {
-                            authProvider.clearError();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const ForgotPasswordScreen(),
-                              ),
-                            );
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Text(
-                              'Forget Password?',
-                              style: TextStyle(
-                                color: primaryColor,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-
-                      // ── Sign In Button ──
-                      PrimaryButton(
-                        label: 'Sign in',
-                        isLoading: authProvider.isLoading,
-                        onPressed: _handleLogin,
-                        backgroundColor: primaryColor,
-                      ),
-                      const SizedBox(height: 24),
-
-                      // ── Don't have account? Signup ──
-                      Center(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              "Don't Have Account? ",
-                              style: TextStyle(
-                                color: AppColors.textSecondaryOf(context),
-                                fontSize: 14,
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () {
-                                authProvider.clearError();
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => const SignUpScreen(),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 420),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  // ── App Icon ──
+                                  Center(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: Image.asset(
+                                        'assets/icon/app_icon.png',
+                                        width: 88,
+                                        height: 88,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
                                   ),
-                                );
-                              },
-                              child: Text(
-                                'Signup',
-                                style: TextStyle(
-                                  color: primaryColor,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                  const SizedBox(height: 20),
+
+                                  // ── Title ──
+                                  Text(
+                                    'Welcome Back',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: isDark
+                                          ? Colors.white
+                                          : AppColors.textPrimary,
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'Sign in to access your personal notes',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: AppColors.textSecondaryOf(context),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 28),
+
+                                  // ── Error Banner ──
+                                  if (authProvider.errorMessage != null) ...[
+                                    _ErrorBanner(
+                                      message: authProvider.errorMessage!,
+                                      isDark: isDark,
+                                    ),
+                                    const SizedBox(height: 20),
+                                  ],
+
+                                  // ── Email Field ──
+                                  AppTextField(
+                                    controller: _emailController,
+                                    focusNode: _emailFocusNode,
+                                    label: 'Email',
+                                    showLabel: false,
+                                    hint: 'Email',
+                                    prefixIcon: Icons.mail_outlined,
+                                    textInputAction: TextInputAction.next,
+                                    errorText: _emailError,
+                                    onSubmitted: (_) =>
+                                        _passwordFocusNode.requestFocus(),
+                                    onChanged: (_) {
+                                      if (authProvider.errorMessage != null) {
+                                        authProvider.clearError();
+                                      }
+                                      if (_emailError != null) {
+                                        setState(() => _emailError = null);
+                                      }
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // ── Password Field ──
+                                  AppTextField(
+                                    controller: _passwordController,
+                                    focusNode: _passwordFocusNode,
+                                    label: 'Password',
+                                    showLabel: false,
+                                    hint: 'Password',
+                                    isPassword: true,
+                                    textInputAction: TextInputAction.done,
+                                    errorText: _passwordError,
+                                    onSubmitted: (_) => _handleLogin(),
+                                    onChanged: (_) {
+                                      if (authProvider.errorMessage != null) {
+                                        authProvider.clearError();
+                                      }
+                                      if (_passwordError != null) {
+                                        setState(() => _passwordError = null);
+                                      }
+                                    },
+                                  ),
+                                  const SizedBox(height: 8),
+
+                                  // ── Forgot Password ──
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        authProvider.clearError();
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const ForgotPasswordScreen(),
+                                          ),
+                                        );
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 4,
+                                        ),
+                                        child: Text(
+                                          'Forget Password?',
+                                          style: TextStyle(
+                                            color: primaryColor,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 28),
+
+                                  // ── Sign In Button ──
+                                  PrimaryButton(
+                                    label: 'Sign in',
+                                    isLoading: authProvider.isLoading,
+                                    onPressed: _handleLogin,
+                                    backgroundColor: primaryColor,
+                                  ),
+                                  const SizedBox(height: 24),
+
+                                  // ── Don't have account? Signup ──
+                                  Center(
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          "Don't Have Account? ",
+                                          style: TextStyle(
+                                            color: AppColors.textSecondaryOf(
+                                              context,
+                                            ),
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        GestureDetector(
+                                          onTap: () {
+                                            authProvider.clearError();
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    const SignUpScreen(),
+                                              ),
+                                            );
+                                          },
+                                          child: Text(
+                                            'Signup',
+                                            style: TextStyle(
+                                              color: primaryColor,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ),
-            ),
+            ],
           ),
-        );
-      },
-    ),
-  ),
-          ],
-        ),
       ),
     );
   }

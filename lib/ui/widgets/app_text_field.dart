@@ -7,7 +7,7 @@ import '../../core/constants/app_colors.dart';
 /// - `scrollPadding: EdgeInsets.zero`
 /// - `autocorrect: false` / `enableSuggestions: false` by default
 /// - Empty `autofillHints` for password fields
-/// - `TextInputType.visiblePassword` auto-applied for password fields
+/// - `TextInputType.text` used for password fields (avoids iOS autofill bar)
 ///
 /// Password visibility toggle is handled internally — only this widget's
 /// subtree rebuilds on toggle, never the parent screen.
@@ -89,8 +89,7 @@ class _AppTextFieldState extends State<AppTextField> {
   @override
   Widget build(BuildContext context) {
     // ── Resolve keyboard type ──
-    final effectiveKeyboardType = widget.keyboardType ??
-        (widget.isPassword ? TextInputType.visiblePassword : TextInputType.text);
+    final effectiveKeyboardType = widget.keyboardType ?? TextInputType.text;
 
     // ── Resolve autofill hints ──
     final effectiveAutofillHints = widget.autofillHints ??

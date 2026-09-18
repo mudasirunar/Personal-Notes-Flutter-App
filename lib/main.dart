@@ -72,17 +72,13 @@ class AuthWrapper extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: AppColors.isDark(context) ? AppColors.accent : AppColors.primary,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(
-                  Icons.edit_note_rounded,
-                  size: 36,
-                  color: Colors.white,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/icon/app_icon.png',
+                  width: 64,
+                  height: 64,
+                  fit: BoxFit.cover,
                 ),
               ),
               const SizedBox(height: 24),
