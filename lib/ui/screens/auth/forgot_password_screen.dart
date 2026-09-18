@@ -51,7 +51,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: AppColors.scaffoldBackgroundOf(context),
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
@@ -78,26 +78,28 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Widget _buildRequestForm(BuildContext context, AuthProvider authProvider) {
+    final isDark = AppColors.isDark(context);
+
     return Form(
       key: _formKey,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
+          Text(
             'Reset Password',
             style: TextStyle(
-              color: AppColors.textPrimary,
+              color: AppColors.textPrimaryOf(context),
               fontSize: 24,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Enter the email associated with your account and we’ll send you instructions to reset your password.',
             style: TextStyle(
-              color: AppColors.textSecondary,
+              color: AppColors.textSecondaryOf(context),
               fontSize: 14,
               height: 1.4,
             ),
@@ -109,25 +111,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.errorLight,
+                color: isDark ? AppColors.errorLightDark : AppColors.errorLight,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: AppColors.error.withValues(alpha: 0.3),
+                  color: (isDark ? AppColors.errorDark : AppColors.error).withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.error_outline_rounded,
-                    color: AppColors.error,
+                    color: isDark ? AppColors.errorDark : AppColors.error,
                     size: 20,
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       authProvider.errorMessage!,
-                      style: const TextStyle(
-                        color: AppColors.error,
+                      style: TextStyle(
+                        color: isDark ? AppColors.errorDark : AppColors.error,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -174,6 +176,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Widget _buildSuccessView(BuildContext context) {
+    final isDark = AppColors.isDark(context);
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -182,24 +186,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           width: 64,
           height: 64,
           decoration: BoxDecoration(
-            color: AppColors.successLight,
+            color: isDark ? const Color(0x3316A34A) : AppColors.successLight,
             shape: BoxShape.circle,
             border: Border.all(
-              color: AppColors.success.withValues(alpha: 0.3),
+              color: (isDark ? const Color(0xFF4ADE80) : AppColors.success).withValues(alpha: 0.3),
             ),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.mark_email_read_outlined,
             size: 32,
-            color: AppColors.success,
+            color: isDark ? const Color(0xFF4ADE80) : AppColors.success,
           ),
         ),
         const SizedBox(height: 20),
-        const Text(
+        Text(
           'Check Your Email',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: AppColors.textPrimary,
+            color: AppColors.textPrimaryOf(context),
             fontSize: 22,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.3,
@@ -209,18 +213,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         Text(
           'We have sent a password reset link to:\n$_sentToEmail',
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: AppColors.textSecondary,
+          style: TextStyle(
+            color: AppColors.textSecondaryOf(context),
             fontSize: 14,
             height: 1.4,
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
+        Text(
           'Please follow the instructions in the email to set a new password.',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: AppColors.textMuted,
+            color: AppColors.textMutedOf(context),
             fontSize: 13,
           ),
         ),

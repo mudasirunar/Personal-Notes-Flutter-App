@@ -23,29 +23,38 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppColors.isDark(context);
+
     if (isOutlined) {
+      final defaultBorderColor = AppColors.borderOf(context);
+      final defaultTextColor = AppColors.textPrimaryOf(context);
+
       return OutlinedButton(
         onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
           side: BorderSide(
-            color: backgroundColor ?? AppColors.border,
+            color: backgroundColor ?? defaultBorderColor,
             width: 1,
           ),
-          foregroundColor: foregroundColor ?? AppColors.textPrimary,
+          foregroundColor: foregroundColor ?? defaultTextColor,
         ),
-        child: _buildChild(context, foregroundColor ?? AppColors.textPrimary),
+        child: _buildChild(context, foregroundColor ?? defaultTextColor),
       );
     }
+
+    final defaultBg = isDark ? AppColors.accent : AppColors.primary;
+    final effectiveBg = backgroundColor ?? defaultBg;
+    final effectiveFg = foregroundColor ?? Colors.white;
 
     return ElevatedButton(
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor ?? AppColors.primary,
-        foregroundColor: foregroundColor ?? Colors.white,
-        disabledBackgroundColor: (backgroundColor ?? AppColors.primary).withValues(alpha: 0.6),
+        backgroundColor: effectiveBg,
+        foregroundColor: effectiveFg,
+        disabledBackgroundColor: effectiveBg.withValues(alpha: 0.6),
         disabledForegroundColor: Colors.white70,
       ),
-      child: _buildChild(context, foregroundColor ?? Colors.white),
+      child: _buildChild(context, effectiveFg),
     );
   }
 

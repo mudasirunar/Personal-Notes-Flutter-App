@@ -42,8 +42,8 @@ class AppTextField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: AppColors.textPrimaryOf(context),
             fontSize: 13,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.1,
@@ -61,14 +61,14 @@ class AppTextField extends StatelessWidget {
           validator: validator,
           onChanged: onChanged,
           onFieldSubmitted: onSubmitted,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: AppColors.textPrimaryOf(context),
             fontSize: 14.5,
           ),
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: prefixIcon != null
-                ? Icon(prefixIcon, size: 20, color: AppColors.textSecondary)
+                ? Icon(prefixIcon, size: 20, color: AppColors.textSecondaryOf(context))
                 : null,
             suffixIcon: suffixIcon,
             counterText: maxLength != null ? null : '',

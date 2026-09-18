@@ -46,6 +46,8 @@ class PersonalNotesApp extends StatelessWidget {
         title: 'Personal Notes',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system,
         home: const AuthWrapper(),
       ),
     );
@@ -64,7 +66,7 @@ class AuthWrapper extends StatelessWidget {
     // Initial splash / loading while Firebase auth status resolves
     if (!authProvider.isInitialized) {
       return Scaffold(
-        backgroundColor: AppColors.scaffoldBackground,
+        backgroundColor: AppColors.scaffoldBackgroundOf(context),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -73,7 +75,7 @@ class AuthWrapper extends StatelessWidget {
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
+                  color: AppColors.isDark(context) ? AppColors.accent : AppColors.primary,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(

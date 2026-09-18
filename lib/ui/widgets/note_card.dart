@@ -23,9 +23,9 @@ class NoteCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.border, width: 1),
+        side: BorderSide(color: AppColors.borderOf(context), width: 1),
       ),
-      color: Colors.white,
+      color: AppColors.cardSurfaceOf(context),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -43,7 +43,11 @@ class NoteCard extends StatelessWidget {
                   IconButton(
                     icon: Icon(
                       note.isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
-                      color: note.isFavorite ? AppColors.favorite : AppColors.favoriteInactive,
+                      color: note.isFavorite
+                          ? AppColors.favorite
+                          : (AppColors.isDark(context)
+                              ? const Color(0xFF475569)
+                              : AppColors.favoriteInactive),
                       size: 24,
                     ),
                     onPressed: onToggleFavorite,
@@ -60,8 +64,8 @@ class NoteCard extends StatelessWidget {
                 note.title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: AppColors.textPrimaryOf(context),
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.2,
@@ -73,8 +77,8 @@ class NoteCard extends StatelessWidget {
                 note.content,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: AppColors.textSecondaryOf(context),
                   fontSize: 13.5,
                   height: 1.4,
                 ),
@@ -83,16 +87,16 @@ class NoteCard extends StatelessWidget {
               // Timestamp footer
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.access_time_rounded,
                     size: 12,
-                    color: AppColors.textMuted,
+                    color: AppColors.textMutedOf(context),
                   ),
                   const SizedBox(width: 4),
                   Text(
                     'Updated ${DateFormatter.formatNoteDate(note.updatedAt)}',
-                    style: const TextStyle(
-                      color: AppColors.textMuted,
+                    style: TextStyle(
+                      color: AppColors.textMutedOf(context),
                       fontSize: 11.5,
                       fontWeight: FontWeight.w500,
                     ),

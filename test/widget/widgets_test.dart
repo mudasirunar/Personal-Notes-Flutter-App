@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_notes_app/core/constants/app_constants.dart';
+import 'package:personal_notes_app/core/theme/app_theme.dart';
 import 'package:personal_notes_app/data/models/note_model.dart';
 import 'package:personal_notes_app/ui/widgets/category_badge.dart';
 import 'package:personal_notes_app/ui/widgets/empty_state_view.dart';
@@ -125,6 +126,37 @@ void main() {
       // Tap favorite button
       await tester.tap(find.byIcon(Icons.star_rounded));
       expect(favoriteToggled, isTrue);
+    });
+
+    testWidgets('renders properly with darkTheme applied', (tester) async {
+      final testNote = NoteModel(
+        id: 'note-dark-1',
+        title: 'Dark Mode Note',
+        content: 'This note renders with dark theme colors',
+        category: NoteCategory.personal,
+        isFavorite: false,
+        createdAt: DateTime(2026, 9, 18, 10, 0),
+        updatedAt: DateTime(2026, 9, 18, 10, 0),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeMode.dark,
+          home: Scaffold(
+            body: NoteCard(
+              note: testNote,
+              onTap: () {},
+              onToggleFavorite: () {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Dark Mode Note'), findsOneWidget);
+      expect(find.text('This note renders with dark theme colors'), findsOneWidget);
+      expect(find.byIcon(Icons.star_border_rounded), findsOneWidget);
     });
   });
 }

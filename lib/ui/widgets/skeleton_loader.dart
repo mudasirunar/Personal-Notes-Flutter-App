@@ -37,15 +37,15 @@ class _SkeletonCardState extends State<SkeletonCard>
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
-        final shimmerColor = AppColors.shimmerBase.withValues(alpha: _animation.value);
+        final shimmerColor = AppColors.shimmerBaseOf(context).withValues(alpha: _animation.value);
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.cardSurfaceOf(context),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.borderOf(context)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

@@ -53,8 +53,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
 
+    final isDark = AppColors.isDark(context);
+
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: AppColors.scaffoldBackgroundOf(context),
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
@@ -76,20 +78,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
+                    Text(
                       'Create Account',
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: AppColors.textPrimaryOf(context),
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.5,
                       ),
                     ),
                     const SizedBox(height: 6),
-                    const Text(
+                    Text(
                       'Get started by creating your private notes space',
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: AppColors.textSecondaryOf(context),
                         fontSize: 14,
                       ),
                     ),
@@ -100,25 +102,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.errorLight,
+                          color: isDark ? AppColors.errorLightDark : AppColors.errorLight,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: AppColors.error.withValues(alpha: 0.3),
+                            color: (isDark ? AppColors.errorDark : AppColors.error).withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.error_outline_rounded,
-                              color: AppColors.error,
+                              color: isDark ? AppColors.errorDark : AppColors.error,
                               size: 20,
                             ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 authProvider.errorMessage!,
-                                style: const TextStyle(
-                                  color: AppColors.error,
+                                style: TextStyle(
+                                  color: isDark ? AppColors.errorDark : AppColors.error,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -208,10 +210,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       alignment: WrapAlignment.center,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           'Already have an account? ',
                           style: TextStyle(
-                            color: AppColors.textSecondary,
+                            color: AppColors.textSecondaryOf(context),
                             fontSize: 14,
                           ),
                         ),
@@ -220,10 +222,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             authProvider.clearError();
                             Navigator.of(context).pop();
                           },
-                          child: const Text(
+                          child: Text(
                             'Sign In',
                             style: TextStyle(
-                              color: AppColors.accent,
+                              color: isDark ? const Color(0xFF818CF8) : AppColors.accent,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),

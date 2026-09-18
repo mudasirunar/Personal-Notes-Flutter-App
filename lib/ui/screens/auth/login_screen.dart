@@ -48,8 +48,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
 
+    final isDark = AppColors.isDark(context);
+
     return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
+      backgroundColor: AppColors.scaffoldBackgroundOf(context),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -68,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 56,
                         height: 56,
                         decoration: BoxDecoration(
-                          color: AppColors.primary,
+                          color: isDark ? AppColors.accent : AppColors.primary,
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: const Icon(
@@ -79,22 +81,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const Text(
+                    Text(
                       'Welcome Back',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: AppColors.textPrimaryOf(context),
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.5,
                       ),
                     ),
                     const SizedBox(height: 6),
-                    const Text(
+                    Text(
                       'Sign in to access your personal notes',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: AppColors.textSecondaryOf(context),
                         fontSize: 14,
                       ),
                     ),
@@ -105,25 +107,25 @@ class _LoginScreenState extends State<LoginScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.errorLight,
+                          color: isDark ? AppColors.errorLightDark : AppColors.errorLight,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: AppColors.error.withValues(alpha: 0.3),
+                            color: (isDark ? AppColors.errorDark : AppColors.error).withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.error_outline_rounded,
-                              color: AppColors.error,
+                              color: isDark ? AppColors.errorDark : AppColors.error,
                               size: 20,
                             ),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
                                 authProvider.errorMessage!,
-                                style: const TextStyle(
-                                  color: AppColors.error,
+                                style: TextStyle(
+                                  color: isDark ? AppColors.errorDark : AppColors.error,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -194,7 +196,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        child: const Text('Forgot password?'),
+                        child: Text(
+                          'Forgot password?',
+                          style: TextStyle(
+                            color: isDark ? const Color(0xFF818CF8) : AppColors.accent,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -212,10 +221,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       alignment: WrapAlignment.center,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           "Don't have an account? ",
                           style: TextStyle(
-                            color: AppColors.textSecondary,
+                            color: AppColors.textSecondaryOf(context),
                             fontSize: 14,
                           ),
                         ),
@@ -228,10 +237,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             );
                           },
-                          child: const Text(
+                          child: Text(
                             'Sign Up',
                             style: TextStyle(
-                              color: AppColors.accent,
+                              color: isDark ? const Color(0xFF818CF8) : AppColors.accent,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),

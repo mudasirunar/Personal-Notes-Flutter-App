@@ -44,23 +44,26 @@ class ConfirmDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppColors.isDark(context);
+
     return AlertDialog(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.cardSurfaceOf(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppColors.borderOf(context), width: 1),
       ),
       title: Text(
         title,
-        style: const TextStyle(
-          color: AppColors.textPrimary,
+        style: TextStyle(
+          color: AppColors.textPrimaryOf(context),
           fontSize: 18,
           fontWeight: FontWeight.w700,
         ),
       ),
       content: Text(
         message,
-        style: const TextStyle(
-          color: AppColors.textSecondary,
+        style: TextStyle(
+          color: AppColors.textSecondaryOf(context),
           fontSize: 14,
           height: 1.4,
         ),
@@ -70,14 +73,16 @@ class ConfirmDialog extends StatelessWidget {
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
           style: TextButton.styleFrom(
-            foregroundColor: AppColors.textSecondary,
+            foregroundColor: AppColors.textSecondaryOf(context),
           ),
           child: Text(cancelLabel),
         ),
         ElevatedButton(
           onPressed: onConfirm,
           style: ElevatedButton.styleFrom(
-            backgroundColor: isDestructive ? AppColors.error : AppColors.primary,
+            backgroundColor: isDestructive
+                ? (isDark ? AppColors.errorDark : AppColors.error)
+                : (isDark ? AppColors.accent : AppColors.primary),
             foregroundColor: Colors.white,
             minimumSize: const Size(88, 40),
             elevation: 0,
