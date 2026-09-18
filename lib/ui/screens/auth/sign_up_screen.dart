@@ -83,9 +83,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final size = MediaQuery.of(context).size;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    final accentColor = isDark
-        ? const Color(0xFF818CF8)
-        : AppColors.accent;
+    final primaryColor = AppColors.primary;
     final circleSize = size.longestSide * 0.46;
 
     return Scaffold(
@@ -122,11 +120,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     end: Alignment.bottomRight,
                     colors: isDark
                         ? [
-                            accentColor.withValues(alpha: 0.9),
+                            AppColors.primaryDark.withValues(alpha: 0.92),
                             Colors.white.withValues(alpha: 0.85),
                           ]
                         : [
-                            accentColor,
+                            AppColors.primaryDark,
                             Colors.white,
                           ],
                   ),
@@ -134,61 +132,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
             ),
 
-            // ── Content ──
+            // ── Scrollable form (full height under transparent top bar) ──
             SafeArea(
               bottom: false,
-              child: Column(
-                children: [
-                  // ── Back button ──
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 8, top: 4),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          size: 18,
-                          color: isDark ? Colors.white : AppColors.textPrimary,
-                        ),
-                        onPressed: () {
-                          authProvider.clearError();
-                          Navigator.of(context).pop();
-                        },
-                      ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: ClampingScrollPhysics(),
                     ),
-                  ),
-
-                  // ── Scrollable form ──
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        return SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(
-                            parent: ClampingScrollPhysics(),
-                          ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minWidth: constraints.maxWidth,
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: Container(
+                        color: Colors.transparent,
+                        padding: EdgeInsets.only(
+                          left: 28,
+                          right: 28,
+                          top: 56,
+                          bottom: bottomInset + 32,
+                        ),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
                           child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minWidth: constraints.maxWidth,
-                              minHeight: constraints.maxHeight,
-                            ),
-                            child: Container(
-                              color: Colors.transparent,
-                              padding: EdgeInsets.only(
-                                left: 28,
-                                right: 28,
-                                top: 16,
-                                bottom: bottomInset + 32,
-                              ),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: ConstrainedBox(
-                                  constraints:
-                                      const BoxConstraints(maxWidth: 420),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
+                            constraints:
+                                const BoxConstraints(maxWidth: 420),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.stretch,
+                              children: [
                                       // ── Title & Subtext (Centered) ──
                                       Text(
                                         'Create Account',
@@ -319,7 +294,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               label: 'Sign up',
                               isLoading: authProvider.isLoading,
                               onPressed: _handleSignUp,
-                              backgroundColor: accentColor,
+                              backgroundColor: primaryColor,
                             ),
                             const SizedBox(height: 24),
 
@@ -344,7 +319,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     child: Text(
                                       'Sign In',
                                       style: TextStyle(
-                                        color: accentColor,
+                                        color: primaryColor,
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -356,20 +331,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ],
                         ),
                       ),
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
-        ),
-                ],
+
+          // ── Floating Pinned Back button (content scrolls behind) ──
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8, top: 4),
+                child: IconButton(
+                  icon: Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    size: 18,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                  onPressed: () {
+                    authProvider.clearError();
+                    Navigator.of(context).pop();
+                  },
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
+    ),
+  );
   }
 }
 

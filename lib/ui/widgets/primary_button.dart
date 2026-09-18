@@ -23,8 +23,6 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = AppColors.isDark(context);
-
     if (isOutlined) {
       final defaultBorderColor = AppColors.borderOf(context);
       final defaultTextColor = AppColors.textPrimaryOf(context);
@@ -42,8 +40,7 @@ class PrimaryButton extends StatelessWidget {
       );
     }
 
-    final defaultBg = isDark ? AppColors.accent : AppColors.primary;
-    final effectiveBg = backgroundColor ?? defaultBg;
+    final effectiveBg = backgroundColor ?? AppColors.primary;
     final effectiveFg = foregroundColor ?? Colors.white;
 
     return ElevatedButton(

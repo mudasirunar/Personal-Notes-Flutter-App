@@ -134,9 +134,9 @@ class AppTheme {
       brightness: Brightness.dark,
       scaffoldBackgroundColor: AppColors.scaffoldBackgroundDark,
       colorScheme: const ColorScheme.dark(
-        primary: AppColors.accent,
+        primary: AppColors.primary,
         onPrimary: Colors.white,
-        secondary: Color(0xFF818CF8),
+        secondary: AppColors.primary,
         onSecondary: Colors.white,
         surface: AppColors.cardSurfaceDark,
         onSurface: AppColors.textPrimaryDark,
@@ -202,7 +202,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.accent,
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(48),
           elevation: 0,
@@ -232,7 +232,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: const Color(0xFF818CF8),
+          foregroundColor: AppColors.primary,
           textStyle: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -240,7 +240,7 @@ class AppTheme {
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: AppColors.accent,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 2,
         shape: RoundedRectangleBorder(

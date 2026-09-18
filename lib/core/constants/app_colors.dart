@@ -3,27 +3,32 @@ import 'package:flutter/material.dart';
 /// Single source of truth for all application colors.
 /// Adheres to a minimal, modern, and professional aesthetic without flashy neon or heavy gradients.
 class AppColors {
-  // Brand & Neutrals
-  static const Color primary = Color(0xFF0F172A); // Slate 900
-  static const Color accent = Color(0xFF4F46E5); // Indigo 600
-  static const Color accentLight = Color(0xFFEEF2FF); // Indigo 50
+  // Primary Brand Color (Indigo 600 - Unified for both Light & Dark modes)
+  static const Color primary = Color(0xFF4F46E5); // Indigo 600 - Main App Primary Color
+  static const Color primaryLight = Color(0xFFEEF2FF); // Indigo 50
+  static const Color primaryDark = Color(0xFF4338CA); // Indigo 700
+  static const Color primaryDarker = Color(0xFF3730A3); // Indigo 800 - Deeper purple
+  static const Color accent = primary; // Brand accent
+  static const Color accentLight = primaryLight;
 
+  // Neutral Surfaces & Backgrounds
+  static const Color slateDark = Color(0xFF0F172A); // Slate 900
   static const Color scaffoldBackground = Color(0xFFF8FAFC); // Slate 50
   static const Color cardSurface = Colors.white;
   static const Color inputFill = Color(0xFFF8FAFC);
 
   // Borders & Dividers
   static const Color border = Color(0xFFE2E8F0); // Slate 200
-  static const Color borderFocused = Color(0xFF4F46E5);
+  static const Color borderFocused = primary;
 
   // Typography Colors
-  static const Color textPrimary = Color(0xFF0F172A);
+  static const Color textPrimary = Color(0xFF0F172A); // Slate 900
   static const Color textSecondary = Color(0xFF64748B); // Slate 500
   static const Color textMuted = Color(0xFF94A3B8); // Slate 400
 
-  // Semantic Colors
-  static const Color error = Color(0xFFDC2626); // Red 600
-  static const Color errorLight = Color(0xFFFEF2F2); // Red 50
+  // Semantic Colors (Lighter refined Red 500 #EF4444 for both modes)
+  static const Color error = Color(0xFFEF4444); // Red 500
+  static const Color errorLight = Color(0x1AEF4444); // Red 500 with 10% opacity
   static const Color success = Color(0xFF16A34A); // Green 600
   static const Color successLight = Color(0xFFF0FDF4); // Green 50
 
@@ -54,16 +59,16 @@ class AppColors {
 
   // Dark Borders
   static const Color borderDark = Color(0xFF334155); // Slate 700
-  static const Color borderFocusedDark = Color(0xFF818CF8); // Indigo 400
+  static const Color borderFocusedDark = primary;
 
   // Dark Typography (High-contrast, eye-friendly readability)
   static const Color textPrimaryDark = Color(0xFFF8FAFC); // Slate 50
   static const Color textSecondaryDark = Color(0xFF94A3B8); // Slate 400
   static const Color textMutedDark = Color(0xFF64748B); // Slate 500
 
-  // Dark Semantic
-  static const Color errorDark = Color(0xFFF87171); // Red 400
-  static const Color errorLightDark = Color(0x33DC2626); // Red 600 with opacity
+  // Dark Semantic (Lighter refined Red 500 #EF4444 for dark mode)
+  static const Color errorDark = Color(0xFFEF4444); // Red 500
+  static const Color errorLightDark = Color(0x26EF4444); // Red 500 with 15% opacity
 
   // Dark Shimmer
   static const Color shimmerBaseDark = Color(0xFF1E293B);

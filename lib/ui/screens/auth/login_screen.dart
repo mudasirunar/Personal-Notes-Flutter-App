@@ -61,9 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final size = MediaQuery.of(context).size;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    final accentColor = isDark
-        ? const Color(0xFF818CF8)
-        : AppColors.accent;
+    final primaryColor = AppColors.primary;
     final circleSize = size.longestSide * 0.46;
 
     return Scaffold(
@@ -100,11 +98,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     end: Alignment.bottomRight,
                     colors: isDark
                         ? [
-                            accentColor.withValues(alpha: 0.9),
+                            AppColors.primaryDarker.withValues(alpha: 0.95),
                             Colors.white.withValues(alpha: 0.85),
                           ]
                         : [
-                            accentColor,
+                            AppColors.primaryDarker,
                             Colors.white,
                           ],
                   ),
@@ -148,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: 60,
                           height: 60,
                           decoration: BoxDecoration(
-                            color: accentColor,
+                            color: primaryColor,
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: const Icon(
@@ -252,7 +250,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Text(
                               'Forget Password?',
                               style: TextStyle(
-                                color: accentColor,
+                                color: primaryColor,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -267,7 +265,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         label: 'Sign in',
                         isLoading: authProvider.isLoading,
                         onPressed: _handleLogin,
-                        backgroundColor: accentColor,
+                        backgroundColor: primaryColor,
                       ),
                       const SizedBox(height: 24),
 
@@ -295,7 +293,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Text(
                                 'Signup',
                                 style: TextStyle(
-                                  color: accentColor,
+                                  color: primaryColor,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                 ),
