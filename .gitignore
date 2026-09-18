@@ -1,0 +1,78 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+*.hprof
+*.crash
+crashlytics-build.properties
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Android / Gradle / Kotlin related
+.gradle/
+build/
+android/.gradle/
+android/app/build/
+android/app/debug/
+android/app/profile/
+android/app/release/
+local.properties
+*.apk
+*.aab
+.kotlin/
+*.kt.bin
+*.kotlin_module
+
+# iOS / Xcode related
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/app.flx
+ios/Flutter/app.zip
+ios/Flutter/flutter_assets/
+ios/Flutter/flutter_export_environment.sh
+ios/ServiceDefinitions.json
+**/ios/Flutter/.last_build_id
+DerivedData/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+xcuserdata/
+
+# Flutter / Dart / Pub related
+**/doc/api/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/coverage/
+
+# Symbolication & Obfuscation
+app.*.symbols
+app.*.map.json
+
+# Environment and Keys
+*.keystore
+*.jks
+key.properties
+.env*
+
+# Widget Preview related
+.widget_preview/
