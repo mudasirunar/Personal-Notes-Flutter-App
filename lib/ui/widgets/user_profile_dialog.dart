@@ -178,13 +178,15 @@ class UserProfileDialog extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF334155) : const Color(0xFFEEF2FF),
+                      color: isDark
+                          ? AppColors.primary.withValues(alpha: 0.12)
+                          : const Color(0xFFEEF2FF),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       '$totalNotes total',
                       style: TextStyle(
-                        color: isDark ? Colors.white : AppColors.primary,
+                        color: isDark ? const Color(0xFF93C5FD) : AppColors.primary,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -205,7 +207,7 @@ class UserProfileDialog extends StatelessWidget {
                       icon: NoteCategory.personal.icon,
                       color: AppColors.categoryPersonal,
                       bgColor: isDark
-                          ? const Color(0xFF1E293B)
+                          ? AppColors.categoryPersonal.withValues(alpha: 0.12)
                           : AppColors.categoryPersonalBg,
                     ),
                   ),
@@ -218,7 +220,7 @@ class UserProfileDialog extends StatelessWidget {
                       icon: NoteCategory.work.icon,
                       color: AppColors.categoryWork,
                       bgColor: isDark
-                          ? const Color(0xFF1E293B)
+                          ? AppColors.categoryWork.withValues(alpha: 0.12)
                           : AppColors.categoryWorkBg,
                     ),
                   ),
@@ -235,7 +237,7 @@ class UserProfileDialog extends StatelessWidget {
                       icon: NoteCategory.study.icon,
                       color: AppColors.categoryStudy,
                       bgColor: isDark
-                          ? const Color(0xFF1E293B)
+                          ? AppColors.categoryStudy.withValues(alpha: 0.12)
                           : AppColors.categoryStudyBg,
                     ),
                   ),
@@ -248,7 +250,7 @@ class UserProfileDialog extends StatelessWidget {
                       icon: Icons.star_rounded,
                       color: AppColors.favorite,
                       bgColor: isDark
-                          ? const Color(0xFF1E293B)
+                          ? AppColors.favorite.withValues(alpha: 0.12)
                           : const Color(0xFFFEF9C3),
                     ),
                   ),
