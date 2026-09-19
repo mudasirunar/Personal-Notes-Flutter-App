@@ -11,8 +11,9 @@ import '../../widgets/primary_button.dart';
 
 class AddEditNoteScreen extends StatefulWidget {
   final NoteModel? note;
+  final NoteCategory? initialCategory;
 
-  const AddEditNoteScreen({super.key, this.note});
+  const AddEditNoteScreen({super.key, this.note, this.initialCategory});
 
   bool get isEditing => note != null;
 
@@ -33,7 +34,8 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
     super.initState();
     _titleController = TextEditingController(text: widget.note?.title ?? '');
     _contentController = TextEditingController(text: widget.note?.content ?? '');
-    _selectedCategory = widget.note?.category ?? NoteCategory.personal;
+    _selectedCategory =
+        widget.note?.category ?? widget.initialCategory ?? NoteCategory.personal;
     _isFavorite = widget.note?.isFavorite ?? false;
 
     _titleController.addListener(_markDirty);

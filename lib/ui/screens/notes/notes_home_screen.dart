@@ -1,10 +1,13 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../data/models/note_model.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/notes_provider.dart';
+import '../../widgets/animated_fab.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/empty_state_view.dart';
 import '../../widgets/note_card.dart';
@@ -22,19 +25,57 @@ class NotesHomeScreen extends StatefulWidget {
 
 class _NotesHomeScreenState extends State<NotesHomeScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  bool _isFabVisible = true;
+  String _lastSearchQuery = '';
+  NotesFilter _lastFilter = NotesFilter.all;
+
+  void _scrollToTop({bool animated = true}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients && _scrollController.offset > 0.0) {
+        if (animated) {
+          _scrollController.animateTo(
+            0.0,
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+          );
+        } else {
+          _scrollController.jumpTo(0.0);
+        }
+      }
+    });
+  }
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
-  void _openAddEditNote([NoteModel? note]) {
+  void _openAddEditNote([NoteModel? note, NoteCategory? initialCategory]) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => AddEditNoteScreen(note: note),
+        builder: (_) => AddEditNoteScreen(
+          note: note,
+          initialCategory: initialCategory,
+        ),
       ),
     );
+  }
+
+  NoteCategory? _getPreselectedCategory(NotesFilter filter) {
+    switch (filter) {
+      case NotesFilter.personal:
+        return NoteCategory.personal;
+      case NotesFilter.work:
+        return NoteCategory.work;
+      case NotesFilter.study:
+        return NoteCategory.study;
+      case NotesFilter.all:
+      case NotesFilter.favorites:
+        return null;
+    }
   }
 
   void _openProfileDialog({
@@ -108,210 +149,291 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
             ? "$displayName's Notes"
             : 'My Notes');
 
+    // Automatically reset scroll to top when search query or filter changes
+    // so result cards start immediately below the header instead of being pushed behind it.
+    if (notesProvider.searchQuery != _lastSearchQuery ||
+        notesProvider.currentFilter != _lastFilter) {
+      _lastSearchQuery = notesProvider.searchQuery;
+      _lastFilter = notesProvider.currentFilter;
+      _scrollToTop();
+      if (!_isFabVisible) {
+        _isFabVisible = true;
+      }
+    }
+
+    final headerHeight = MediaQuery.paddingOf(context).top + 168.0;
+
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackgroundOf(context),
-      appBar: AppBar(
-        backgroundColor: AppColors.scaffoldBackgroundOf(context),
-        elevation: 0,
-        titleSpacing: 16,
-        title: Row(
-          children: [
-            UserAvatar(
-              name: displayName,
-              email: userEmail,
-              userId: authProvider.userId,
-              size: 42,
-              isLoading: !authProvider.isInitialized,
-              onTap: () => _openProfileDialog(
-                fullName: displayName,
-                email: userEmail,
-                userId: authProvider.userId,
-                allNotes: notesProvider.allNotes,
-              ),
+      body: Stack(
+        children: [
+          // 1. Content Feed & States (underneath translucent header)
+          Positioned.fill(
+            child: _buildContent(notesProvider, filteredNotes, headerHeight),
+          ),
+
+          // 2. Translucent Frosted Glass Header (Avatar, Name, Email, Search Bar, Filter Chips)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: _buildTranslucentHeader(
+              context: context,
+              notesProvider: notesProvider,
+              authProvider: authProvider,
+              greetingTitle: greetingTitle,
+              userEmail: userEmail,
+              displayName: displayName,
+              totalNotesCount: totalNotesCount,
+              favoriteCount: favoriteCount,
+              personalCount: personalCount,
+              workCount: workCount,
+              studyCount: studyCount,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    greetingTitle,
-                    style: TextStyle(
-                      color: AppColors.textPrimaryOf(context),
-                      fontSize: 19,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.4,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    userEmail,
-                    style: TextStyle(
-                      color: AppColors.textMutedOf(context),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // Search Bar & Filter Section
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              child: Column(
-                children: [
-                  // Search Input
-                  TextField(
-                    controller: _searchController,
-                    onChanged: (val) => notesProvider.setSearchQuery(val),
-                    style: TextStyle(
-                      color: AppColors.textPrimaryOf(context),
-                      fontSize: 14.5,
-                    ),
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: AppColors.cardSurfaceOf(context),
-                      hintText: 'Search notes...',
-                      hintStyle: TextStyle(
-                        color: AppColors.textMutedOf(context),
-                        fontSize: 14,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.search_rounded,
-                        color: AppColors.textMutedOf(context),
-                        size: 20,
-                      ),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.close_rounded,
-                                color: AppColors.textMutedOf(context),
-                                size: 18,
-                              ),
-                              onPressed: () {
-                                _searchController.clear();
-                                notesProvider.setSearchQuery('');
-                              },
-                            )
-                          : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: AppColors.borderOf(context),
-                          width: 1,
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: AppColors.borderOf(context),
-                          width: 1,
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: AppColors.primary,
-                          width: 1.5,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 13,
-                      ),
-                    ),
+      floatingActionButton: filteredNotes.isEmpty
+          ? null
+          : AnimatedFab(
+              isVisible: _isFabVisible,
+              onPressed: () => _openAddEditNote(
+                null,
+                _getPreselectedCategory(notesProvider.currentFilter),
+              ),
+            ),
+    );
+  }
+
+  Widget _buildTranslucentHeader({
+    required BuildContext context,
+    required NotesProvider notesProvider,
+    required AuthProvider authProvider,
+    required String greetingTitle,
+    required String userEmail,
+    required String? displayName,
+    required int totalNotesCount,
+    required int favoriteCount,
+    required int personalCount,
+    required int workCount,
+    required int studyCount,
+  }) {
+    final isDark = AppColors.isDark(context);
+
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {}, // Blocks touches from bleeding through to note cards behind
+          child: Container(
+            decoration: BoxDecoration(
+              // Higher translucency (~50%) so notes behind are clearly visible
+              color: isDark
+                  ? const Color(0xFF0A0E1A).withValues(alpha: 0.48)
+                  : Colors.white.withValues(alpha: 0.52),
+              border: Border(
+                bottom: BorderSide(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.12)
+                      : Colors.black.withValues(alpha: 0.08),
+                  width: 1,
+                ),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(
+                    alpha: isDark ? 0.15 : 0.03,
                   ),
-                  const SizedBox(height: 12),
-
-                  // Horizontal Filter Chips: All, Favorites, Personal, Work, Study
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Profile & Greeting Row (Avatar, Name, Email)
+                    Row(
                       children: [
-                        // ── 1. All (Primary theme color, no icon) ──
-                        _buildFilterChip(
-                          label: 'All',
-                          count: totalNotesCount,
-                          color: AppColors.primary,
-                          isSelected: notesProvider.currentFilter == NotesFilter.all,
-                          onTap: () => notesProvider.setFilter(NotesFilter.all),
+                        UserAvatar(
+                          name: displayName,
+                          email: userEmail,
+                          userId: authProvider.userId,
+                          size: 42,
+                          isLoading: !authProvider.isInitialized,
+                          onTap: () => _openProfileDialog(
+                            fullName: displayName,
+                            email: userEmail,
+                            userId: authProvider.userId,
+                            allNotes: notesProvider.allNotes,
+                          ),
                         ),
-                        const SizedBox(width: 8),
-
-                        // ── 2. Favorites (Amber color, star icon) ──
-                        _buildFilterChip(
-                          label: 'Favorites',
-                          icon: Icons.star_rounded,
-                          count: favoriteCount,
-                          color: AppColors.favorite,
-                          isSelected: notesProvider.currentFilter == NotesFilter.favorites,
-                          onTap: () => notesProvider.setFilter(NotesFilter.favorites),
-                        ),
-                        const SizedBox(width: 8),
-
-                        // ── 3. Personal (Violet color, person icon) ──
-                        _buildFilterChip(
-                          label: 'Personal',
-                          icon: NoteCategory.personal.icon,
-                          count: personalCount,
-                          color: AppColors.categoryPersonal,
-                          isSelected: notesProvider.currentFilter == NotesFilter.personal,
-                          onTap: () => notesProvider.setFilter(NotesFilter.personal),
-                        ),
-                        const SizedBox(width: 8),
-
-                        // ── 4. Work (Royal Blue color, work icon) ──
-                        _buildFilterChip(
-                          label: 'Work',
-                          icon: NoteCategory.work.icon,
-                          count: workCount,
-                          color: AppColors.categoryWork,
-                          isSelected: notesProvider.currentFilter == NotesFilter.work,
-                          onTap: () => notesProvider.setFilter(NotesFilter.work),
-                        ),
-                        const SizedBox(width: 8),
-
-                        // ── 5. Study (Emerald color, book icon) ──
-                        _buildFilterChip(
-                          label: 'Study',
-                          icon: NoteCategory.study.icon,
-                          count: studyCount,
-                          color: AppColors.categoryStudy,
-                          isSelected: notesProvider.currentFilter == NotesFilter.study,
-                          onTap: () => notesProvider.setFilter(NotesFilter.study),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                greetingTitle,
+                                style: TextStyle(
+                                  color: AppColors.textPrimaryOf(context),
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: -0.4,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                userEmail,
+                                style: TextStyle(
+                                  color: AppColors.textMutedOf(context),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+
+                    // Translucent Search Input Field
+                    TextField(
+                      controller: _searchController,
+                      onChanged: (val) {
+                        _scrollToTop();
+                        notesProvider.setSearchQuery(val);
+                      },
+                      style: TextStyle(
+                        color: AppColors.textPrimaryOf(context),
+                        fontSize: 14.5,
+                      ),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: isDark
+                            ? const Color(0xFF1E293B).withValues(alpha: 0.40)
+                            : const Color(0xFFF1F5F9).withValues(alpha: 0.45),
+                        hintText: 'Search notes...',
+                        hintStyle: TextStyle(
+                          color: AppColors.textMutedOf(context),
+                          fontSize: 14,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          color: AppColors.textMutedOf(context),
+                          size: 20,
+                        ),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.close_rounded,
+                                  color: AppColors.textMutedOf(context),
+                                  size: 18,
+                                ),
+                                onPressed: () {
+                                  _scrollToTop();
+                                  _searchController.clear();
+                                  notesProvider.setSearchQuery('');
+                                },
+                              )
+                            : null,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: AppColors.borderOf(context).withValues(alpha: 0.5),
+                            width: 1,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: AppColors.borderOf(context).withValues(alpha: 0.5),
+                            width: 1,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppColors.primary,
+                            width: 1.5,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Horizontal Filter Chips: All, Favorites, Personal, Work, Study
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildFilterChip(
+                            label: 'All',
+                            count: totalNotesCount,
+                            color: AppColors.primary,
+                            isSelected: notesProvider.currentFilter == NotesFilter.all,
+                            onTap: () => notesProvider.setFilter(NotesFilter.all),
+                          ),
+                          const SizedBox(width: 8),
+                          _buildFilterChip(
+                            label: 'Favorites',
+                            icon: Icons.star_rounded,
+                            count: favoriteCount,
+                            color: AppColors.favorite,
+                            isSelected: notesProvider.currentFilter == NotesFilter.favorites,
+                            onTap: () => notesProvider.setFilter(NotesFilter.favorites),
+                          ),
+                          const SizedBox(width: 8),
+                          _buildFilterChip(
+                            label: 'Personal',
+                            icon: NoteCategory.personal.icon,
+                            count: personalCount,
+                            color: AppColors.categoryPersonal,
+                            isSelected: notesProvider.currentFilter == NotesFilter.personal,
+                            onTap: () => notesProvider.setFilter(NotesFilter.personal),
+                          ),
+                          const SizedBox(width: 8),
+                          _buildFilterChip(
+                            label: 'Work',
+                            icon: NoteCategory.work.icon,
+                            count: workCount,
+                            color: AppColors.categoryWork,
+                            isSelected: notesProvider.currentFilter == NotesFilter.work,
+                            onTap: () => notesProvider.setFilter(NotesFilter.work),
+                          ),
+                          const SizedBox(width: 8),
+                          _buildFilterChip(
+                            label: 'Study',
+                            icon: NoteCategory.study.icon,
+                            count: studyCount,
+                            color: AppColors.categoryStudy,
+                            isSelected: notesProvider.currentFilter == NotesFilter.study,
+                            onTap: () => notesProvider.setFilter(NotesFilter.study),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-
-            // Feed Content
-            Expanded(
-              child: _buildContent(notesProvider, filteredNotes),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openAddEditNote(),
-        icon: const Icon(Icons.add_rounded, size: 22),
-        label: const Text(
-          'New Note',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          ),
         ),
       ),
     );
@@ -334,7 +456,13 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
     final unselectedBorder = chipColor.withValues(alpha: isDark ? 0.35 : 0.28);
 
     return GestureDetector(
-      onTap: onTap,
+      key: ValueKey('filter_chip_${label.toLowerCase()}'),
+      onTap: () {
+        if (!_isFabVisible) {
+          setState(() => _isFabVisible = true);
+        }
+        onTap();
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -345,15 +473,6 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
             color: isSelected ? Colors.transparent : unselectedBorder,
             width: 1,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: chipColor.withValues(alpha: 0.35),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -399,17 +518,24 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
     );
   }
 
-  Widget _buildContent(NotesProvider notesProvider, List<NoteModel> filteredNotes) {
+  Widget _buildContent(
+    NotesProvider notesProvider,
+    List<NoteModel> filteredNotes,
+    double headerHeight,
+  ) {
     // 1. Initial skeleton loading state
     if (notesProvider.isLoading && notesProvider.allNotes.isEmpty) {
-      return const NotesListSkeleton(count: 4);
+      return Padding(
+        padding: EdgeInsets.only(top: headerHeight),
+        child: const NotesListSkeleton(count: 4),
+      );
     }
 
     // 2. Error state
     if (notesProvider.errorMessage != null && notesProvider.allNotes.isEmpty) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(24, headerHeight + 16, 24, 24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -450,39 +576,78 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
 
     // 3. Contextual empty states
     if (filteredNotes.isEmpty) {
+      Widget emptyWidget;
       if (notesProvider.searchQuery.trim().isNotEmpty) {
-        return EmptyStateView.noSearchResults(
-          onClearFilters: () {
+        emptyWidget = EmptyStateView.noSearchResults(
+          query: notesProvider.searchQuery,
+          onClearSearch: () {
+            _scrollToTop();
             _searchController.clear();
-            notesProvider.clearFilters();
+            notesProvider.setSearchQuery('');
           },
         );
-      }
-
-      if (notesProvider.currentFilter == NotesFilter.favorites) {
-        return EmptyStateView.noFavorites(
+      } else if (notesProvider.currentFilter == NotesFilter.favorites) {
+        emptyWidget = EmptyStateView.noFavorites(
           onViewAll: () => notesProvider.setFilter(NotesFilter.all),
+        );
+      } else if (notesProvider.currentFilter == NotesFilter.personal) {
+        emptyWidget = EmptyStateView.noPersonalNotes(
+          onCreateNote: () => _openAddEditNote(null, NoteCategory.personal),
+        );
+      } else if (notesProvider.currentFilter == NotesFilter.work) {
+        emptyWidget = EmptyStateView.noWorkNotes(
+          onCreateNote: () => _openAddEditNote(null, NoteCategory.work),
+        );
+      } else if (notesProvider.currentFilter == NotesFilter.study) {
+        emptyWidget = EmptyStateView.noStudyNotes(
+          onCreateNote: () => _openAddEditNote(null, NoteCategory.study),
+        );
+      } else {
+        emptyWidget = EmptyStateView.noNotes(
+          onCreateNote: () => _openAddEditNote(),
         );
       }
 
-      return EmptyStateView.noNotes(
-        onCreateNote: () => _openAddEditNote(),
+      return Padding(
+        padding: EdgeInsets.only(top: headerHeight),
+        child: emptyWidget,
       );
     }
 
     // 4. Feed of notes
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
-      itemCount: filteredNotes.length,
-      itemBuilder: (context, index) {
-        final note = filteredNotes[index];
-        return NoteCard(
-          key: ValueKey(note.id),
-          note: note,
-          onTap: () => _openAddEditNote(note),
-          onToggleFavorite: () => notesProvider.toggleFavorite(note),
-        );
+    return NotificationListener<UserScrollNotification>(
+      onNotification: (notification) {
+        // Only trigger slide down/up if the screen content is actually scrollable (> 40px overflow)
+        if (notification.metrics.maxScrollExtent > 40) {
+          if (notification.direction == ScrollDirection.reverse) {
+            // User scrolled down -> smoothly hide FAB
+            if (_isFabVisible) {
+              setState(() => _isFabVisible = false);
+            }
+          } else if (notification.direction == ScrollDirection.forward) {
+            // User scrolled up -> smoothly reveal FAB
+            if (!_isFabVisible) {
+              setState(() => _isFabVisible = true);
+            }
+          }
+        }
+        return false;
       },
+      child: ListView.builder(
+        controller: _scrollController,
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: EdgeInsets.fromLTRB(16, headerHeight + 8, 16, 80),
+        itemCount: filteredNotes.length,
+        itemBuilder: (context, index) {
+          final note = filteredNotes[index];
+          return NoteCard(
+            key: ValueKey(note.id),
+            note: note,
+            onTap: () => _openAddEditNote(note),
+            onToggleFavorite: () => notesProvider.toggleFavorite(note),
+          );
+        },
+      ),
     );
   }
 }

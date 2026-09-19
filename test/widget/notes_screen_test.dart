@@ -10,6 +10,8 @@ import 'package:personal_notes_app/providers/auth_provider.dart';
 import 'package:personal_notes_app/providers/notes_provider.dart';
 import 'package:personal_notes_app/ui/screens/notes/add_edit_note_screen.dart';
 import 'package:personal_notes_app/ui/screens/notes/notes_home_screen.dart';
+import 'package:personal_notes_app/ui/widgets/category_badge.dart';
+import 'package:personal_notes_app/ui/widgets/note_card.dart';
 import 'package:provider/provider.dart';
 
 class _FakeNotesService extends Fake implements NotesService {
@@ -65,6 +67,14 @@ class _FakeNotesService extends Fake implements NotesService {
 class _FakeAuthService extends Fake implements AuthService {
   final _controller = StreamController<User?>.broadcast();
 
+  _FakeAuthService() {
+    scheduleMicrotask(() {
+      if (!_controller.isClosed) {
+        _controller.add(null);
+      }
+    });
+  }
+
   @override
   Stream<User?> get authStateChanges => _controller.stream;
 
@@ -112,10 +122,11 @@ void main() {
       expect(find.text('My Notes'), findsOneWidget);
       expect(find.text('No notes yet'), findsOneWidget);
       expect(find.text('Create a Note'), findsOneWidget);
-      expect(find.byType(FloatingActionButton), findsOneWidget);
+      // When empty state CTA is present, FAB is hidden to eliminate redundant CTAs
+      expect(find.byType(FloatingActionButton), findsNothing);
     });
 
-    testWidgets('renders note cards when notes are emitted', (tester) async {
+    testWidgets('renders note cards and FAB when notes are emitted', (tester) async {
       final sampleNotes = [
         NoteModel(
           id: 'note-1',
@@ -129,7 +140,7 @@ void main() {
         NoteModel(
           id: 'note-2',
           title: 'Study Flutter',
-          content: 'Read documentation on state management',
+          content: 'Practice widget testing',
           category: NoteCategory.study,
           isFavorite: true,
           createdAt: DateTime(2026, 9, 18, 9, 0),
@@ -146,6 +157,8 @@ void main() {
       expect(find.text('Study Flutter'), findsOneWidget);
       expect(find.text('Work'), findsWidgets);
       expect(find.text('Study'), findsWidgets);
+      // FAB is visible when notes exist
+      expect(find.byType(FloatingActionButton), findsOneWidget);
     });
 
     testWidgets('filters notes by search query', (tester) async {
@@ -188,6 +201,49 @@ void main() {
 
       expect(find.text('Grocery List'), findsOneWidget);
       expect(find.text('Sprint Planning'), findsNothing);
+    });
+
+    testWidgets('search ranks title matches ahead of description matches and orders alphabetically', (tester) async {
+      final sampleNotes = [
+        NoteModel(
+          id: 'note-1',
+          title: 'Daily Journal',
+          content: 'Today I need to study physics and chemistry.',
+          category: NoteCategory.personal,
+          createdAt: DateTime(2026, 9, 18, 10, 0),
+        ),
+        NoteModel(
+          id: 'note-2',
+          title: 'Study Plan',
+          content: 'Tasks to finish this semester.',
+          category: NoteCategory.study,
+          createdAt: DateTime(2026, 9, 18, 9, 0),
+        ),
+        NoteModel(
+          id: 'note-3',
+          title: 'Study Notes for Calculus',
+          content: 'Derivatives and integrals.',
+          category: NoteCategory.study,
+          createdAt: DateTime(2026, 9, 18, 8, 0),
+        ),
+      ];
+
+      fakeNotesService.emit(sampleNotes);
+
+      await tester.pumpWidget(createTestWidget(const NotesHomeScreen()));
+      await tester.pump();
+
+      await tester.enterText(find.byType(TextField), 'stud');
+      await tester.pump();
+
+      // Verify NoteCards are displayed in prioritized relevance & alphabetical order:
+      // 1. "Study Notes for Calculus" & "Study Plan" (both title prefix match, sorted alphabetically)
+      // 2. "Daily Journal" (only content matches "study")
+      final cards = tester.widgetList<NoteCard>(find.byType(NoteCard)).toList();
+      expect(cards.length, equals(3));
+      expect(cards[0].note.title, equals('Study Notes for Calculus'));
+      expect(cards[1].note.title, equals('Study Plan'));
+      expect(cards[2].note.title, equals('Daily Journal'));
     });
 
     testWidgets('renders all 5 filter chips and filters notes mutually exclusively', (tester) async {
@@ -239,7 +295,7 @@ void main() {
       expect(find.text('Study Note 1'), findsOneWidget);
 
       // Tap Favorites -> only note-1 and note-3
-      await tester.tap(find.text('Favorites'));
+      await tester.tap(find.byKey(const ValueKey('filter_chip_favorites')));
       await tester.pump();
 
       expect(find.text('Work Note 1'), findsOneWidget);
@@ -247,7 +303,7 @@ void main() {
       expect(find.text('Personal Note 1'), findsNothing);
 
       // Tap Personal chip -> only note-2
-      await tester.tap(find.text('Personal').first);
+      await tester.tap(find.byKey(const ValueKey('filter_chip_personal')));
       await tester.pump();
 
       expect(find.text('Personal Note 1'), findsOneWidget);
@@ -255,7 +311,7 @@ void main() {
       expect(find.text('Study Note 1'), findsNothing);
 
       // Tap Work chip -> only note-1
-      await tester.tap(find.text('Work').first);
+      await tester.tap(find.byKey(const ValueKey('filter_chip_work')));
       await tester.pump();
 
       expect(find.text('Work Note 1'), findsOneWidget);
@@ -263,12 +319,343 @@ void main() {
       expect(find.text('Study Note 1'), findsNothing);
 
       // Tap All chip -> restores all 3
-      await tester.tap(find.text('All'));
+      await tester.tap(find.byKey(const ValueKey('filter_chip_all')));
       await tester.pump();
 
       expect(find.text('Work Note 1'), findsOneWidget);
       expect(find.text('Personal Note 1'), findsOneWidget);
       expect(find.text('Study Note 1'), findsOneWidget);
+    });
+
+    testWidgets('renders contextual empty state for search with clear CTA', (tester) async {
+      final sampleNotes = [
+        NoteModel(
+          id: 'note-1',
+          title: 'Grocery Items',
+          content: 'Milk, bread',
+          category: NoteCategory.personal,
+          isFavorite: false,
+          createdAt: DateTime(2026, 9, 18, 10, 0),
+          updatedAt: DateTime(2026, 9, 18, 10, 0),
+        ),
+      ];
+
+      fakeNotesService.emit(sampleNotes);
+
+      await tester.pumpWidget(createTestWidget(const NotesHomeScreen()));
+      await tester.pump();
+
+      // Search non-existent query
+      await tester.enterText(find.byType(TextField), 'xyznonexistent');
+      await tester.pump();
+
+      expect(find.text('No matching notes'), findsOneWidget);
+      expect(find.text('Clear Search'), findsOneWidget);
+
+      // Tap Clear Search
+      await tester.tap(find.text('Clear Search'));
+      await tester.pump();
+
+      expect(find.text('Grocery Items'), findsOneWidget);
+    });
+
+    testWidgets('renders contextual empty state for favorites and category filters', (tester) async {
+      // Only personal non-favorite note
+      final sampleNotes = [
+        NoteModel(
+          id: 'note-1',
+          title: 'Personal Note',
+          content: 'Secret thoughts',
+          category: NoteCategory.personal,
+          isFavorite: false,
+          createdAt: DateTime(2026, 9, 18, 10, 0),
+          updatedAt: DateTime(2026, 9, 18, 10, 0),
+        ),
+      ];
+
+      fakeNotesService.emit(sampleNotes);
+
+      await tester.pumpWidget(createTestWidget(const NotesHomeScreen()));
+      await tester.pump();
+
+      // Tap Favorites -> zero favorites
+      await tester.tap(find.byKey(const ValueKey('filter_chip_favorites')));
+      await tester.pump();
+
+      expect(find.text('No favorite notes yet'), findsOneWidget);
+      expect(find.text('Explore All Notes'), findsOneWidget);
+
+      // Tap Explore All Notes -> restores all notes
+      await tester.tap(find.text('Explore All Notes'));
+      await tester.pump();
+
+      expect(find.text('Personal Note'), findsOneWidget);
+
+      // Tap Work -> zero work notes
+      await tester.tap(find.byKey(const ValueKey('filter_chip_work')));
+      await tester.pump();
+
+      expect(find.text('No work notes yet'), findsOneWidget);
+      expect(find.text('Add Work Note'), findsOneWidget);
+
+      // Tap Study -> zero study notes
+      await tester.tap(find.byKey(const ValueKey('filter_chip_study')));
+      await tester.pump();
+
+      expect(find.text('No study notes yet'), findsOneWidget);
+      expect(find.text('Add Study Note'), findsOneWidget);
+    });
+
+    testWidgets('tapping FAB under active category filter preselects that category in AddEditNoteScreen', (tester) async {
+      final sampleNotes = [
+        NoteModel(
+          id: 'note-1',
+          title: 'Work Project',
+          content: 'Important work stuff',
+          category: NoteCategory.work,
+          isFavorite: false,
+          createdAt: DateTime(2026, 9, 18, 10, 0),
+          updatedAt: DateTime(2026, 9, 18, 10, 0),
+        ),
+      ];
+
+      fakeNotesService.emit(sampleNotes);
+
+      await tester.pumpWidget(createTestWidget(const NotesHomeScreen()));
+      await tester.pump();
+
+      // Tap Work filter chip
+      await tester.tap(find.byKey(const ValueKey('filter_chip_work')));
+      await tester.pump();
+
+      // Tap FAB
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250)); // rotation controller
+      await tester.pump(const Duration(milliseconds: 350)); // navigator push transition
+
+      // AddEditNoteScreen should open with Work category pre-selected
+      expect(find.text('New Note'), findsOneWidget);
+      final workBadge = tester.widget<CategoryBadge>(
+        find.descendant(
+          of: find.byType(AddEditNoteScreen),
+          matching: find.byWidgetPredicate(
+            (w) => w is CategoryBadge && w.category == NoteCategory.work,
+          ),
+        ),
+      );
+      expect(workBadge.isSelected, isTrue);
+    });
+
+    testWidgets('FAB slides down when scrolling down on long list and slides back up when scrolling up', (tester) async {
+      final sampleNotes = List.generate(
+        15,
+        (i) => NoteModel(
+          id: 'note-$i',
+          title: 'Note Title $i',
+          content: 'Some long note content paragraph for note $i to ensure tall list view',
+          category: NoteCategory.work,
+          isFavorite: false,
+          createdAt: DateTime(2026, 9, 18, 10, i),
+          updatedAt: DateTime(2026, 9, 18, 10, i),
+        ),
+      );
+
+      fakeNotesService.emit(sampleNotes);
+
+      await tester.pumpWidget(createTestWidget(const NotesHomeScreen()));
+      await tester.pump();
+
+      final fabFinder = find.byType(FloatingActionButton);
+      expect(fabFinder, findsOneWidget);
+
+      final initialAnimatedSlide = tester.widget<AnimatedSlide>(
+        find.ancestor(of: fabFinder, matching: find.byType(AnimatedSlide)),
+      );
+      expect(initialAnimatedSlide.offset, Offset.zero);
+
+      // Drag/scroll down on the list
+      await tester.drag(find.byType(ListView), const Offset(0, -300));
+      await tester.pump();
+
+      final hiddenAnimatedSlide = tester.widget<AnimatedSlide>(
+        find.ancestor(of: fabFinder, matching: find.byType(AnimatedSlide)),
+      );
+      expect(hiddenAnimatedSlide.offset, const Offset(0, 2));
+
+      // Drag/scroll back up on the list
+      await tester.drag(find.byType(ListView), const Offset(0, 300));
+      await tester.pump();
+
+      final revealedAnimatedSlide = tester.widget<AnimatedSlide>(
+        find.ancestor(of: fabFinder, matching: find.byType(AnimatedSlide)),
+      );
+      expect(revealedAnimatedSlide.offset, Offset.zero);
+    });
+
+    testWidgets('FAB does NOT hide when screen is not scrollable (few notes)', (tester) async {
+      final sampleNotes = [
+        NoteModel(
+          id: 'note-1',
+          title: 'Single Note',
+          content: 'Short content',
+          category: NoteCategory.work,
+          isFavorite: false,
+          createdAt: DateTime(2026, 9, 18, 10, 0),
+          updatedAt: DateTime(2026, 9, 18, 10, 0),
+        ),
+      ];
+
+      fakeNotesService.emit(sampleNotes);
+
+      await tester.pumpWidget(createTestWidget(const NotesHomeScreen()));
+      await tester.pump();
+
+      final fabFinder = find.byType(FloatingActionButton);
+      expect(fabFinder, findsOneWidget);
+
+      // Try dragging
+      await tester.drag(find.byType(ListView), const Offset(0, -50));
+      await tester.pump();
+
+      final animatedSlide = tester.widget<AnimatedSlide>(
+        find.ancestor(of: fabFinder, matching: find.byType(AnimatedSlide)),
+      );
+      // Offset should still be zero (not hidden) because list is not scrollable
+      expect(animatedSlide.offset, Offset.zero);
+    });
+
+    testWidgets('empty screen CTA button does NOT stretch in landscape mode', (tester) async {
+      fakeNotesService.emit([]);
+
+      // Set landscape viewport: 1000px wide
+      tester.view.physicalSize = const Size(1000, 500);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(createTestWidget(const NotesHomeScreen()));
+      await tester.pump();
+
+      final buttonFinder = find.byType(ElevatedButton);
+      expect(buttonFinder, findsOneWidget);
+
+      final buttonSize = tester.getSize(buttonFinder);
+      // Button width must be capped and not stretch across the 1000px viewport
+      expect(buttonSize.width, lessThanOrEqualTo(240));
+      expect(buttonSize.width, greaterThanOrEqualTo(140));
+    });
+
+    testWidgets('translucent top section renders frosted blur and absorbs taps so notes behind are not clickable', (tester) async {
+      final sampleNotes = List.generate(
+        8,
+        (i) => NoteModel(
+          id: 'note-$i',
+          title: 'Note Title $i',
+          content: 'Content for note $i',
+          category: NoteCategory.work,
+          isFavorite: false,
+          createdAt: DateTime(2026, 9, 18, 10, i),
+          updatedAt: DateTime(2026, 9, 18, 10, i),
+        ),
+      );
+
+      fakeNotesService.emit(sampleNotes);
+
+      await tester.pumpWidget(createTestWidget(const NotesHomeScreen()));
+      await tester.pump();
+
+      // Verify BackdropFilter with blur is rendered in top bar
+      expect(find.byType(BackdropFilter), findsWidgets);
+
+      // Drag list upwards by 200px so notes scroll underneath the top header
+      await tester.drag(find.byType(ListView), const Offset(0, -200));
+      await tester.pump();
+
+      // Tap on empty space within the top header area (e.g. Offset(350, 40))
+      // Notes are physically underneath this coordinate, but header must intercept the tap
+      await tester.tapAt(const Offset(350, 40));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Must NOT navigate to AddEditNoteScreen; stays on home screen
+      expect(find.byType(AddEditNoteScreen), findsNothing);
+      expect(find.byType(NotesHomeScreen), findsOneWidget);
+    });
+
+    testWidgets('tapping search bar does not scroll to top, but typing resets scroll to top', (tester) async {
+      final sampleNotes = List.generate(
+        12,
+        (i) => NoteModel(
+          id: 'note-$i',
+          title: i < 3 ? 'Alpha Result $i' : 'Other Note $i',
+          content: 'Content for note $i',
+          category: NoteCategory.work,
+          isFavorite: false,
+          createdAt: DateTime(2026, 9, 18, 10, i),
+          updatedAt: DateTime(2026, 9, 18, 10, i),
+        ),
+      );
+
+      fakeNotesService.emit(sampleNotes);
+
+      await tester.pumpWidget(createTestWidget(const NotesHomeScreen()));
+      await tester.pump();
+
+      // Scroll down by 400px so user is far down in the list
+      await tester.drag(find.byType(ListView), const Offset(0, -400));
+      await tester.pump();
+
+      // Tap on search bar - must NOT scroll to top
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      // Top notes (Alpha Result 0) must still be scrolled off-screen
+      expect(find.text('Alpha Result 0'), findsNothing);
+
+      // Enter search query (user starts typing) - MUST reset scroll to top smoothly
+      await tester.enterText(find.byType(TextField), 'Alpha');
+      await tester.pumpAndSettle();
+
+      // First result must be visible in the viewport and start below the header
+      expect(find.text('Alpha Result 0'), findsOneWidget);
+      final firstCardTop = tester.getTopLeft(find.text('Alpha Result 0')).dy;
+      // Top of first card text must be below the top header (~168px)
+      expect(firstCardTop, greaterThan(168.0));
+    });
+
+    testWidgets('switching category when list is scrolled up smoothly animates cards down into view', (tester) async {
+      final sampleNotes = List.generate(
+        10,
+        (i) => NoteModel(
+          id: 'note-$i',
+          title: i < 5 ? 'Work Note $i' : 'Personal Note $i',
+          content: 'Content for note $i',
+          category: i < 5 ? NoteCategory.work : NoteCategory.personal,
+          isFavorite: false,
+          createdAt: DateTime(2026, 9, 18, 10, i),
+          updatedAt: DateTime(2026, 9, 18, 10, i),
+        ),
+      );
+
+      fakeNotesService.emit(sampleNotes);
+
+      await tester.pumpWidget(createTestWidget(const NotesHomeScreen()));
+      await tester.pumpAndSettle();
+
+      // Scroll down so top notes are behind/above the top bar
+      await tester.drag(find.byType(ListView), const Offset(0, -350));
+      await tester.pumpAndSettle();
+
+      // Tap Work filter chip
+      await tester.tap(find.byKey(const ValueKey('filter_chip_work')));
+      await tester.pumpAndSettle();
+
+      // Top work note must be cleanly visible below header
+      expect(find.text('Work Note 0'), findsOneWidget);
+      final firstWorkCardTop = tester.getTopLeft(find.text('Work Note 0')).dy;
+      expect(firstWorkCardTop, greaterThan(168.0));
     });
   });
 
@@ -309,6 +696,17 @@ void main() {
       expect(find.text('Existing content here'), findsOneWidget);
       expect(find.text('Save Changes'), findsOneWidget);
       expect(find.byIcon(Icons.delete_outline_rounded), findsOneWidget);
+    });
+
+    testWidgets('pre-selects initialCategory when provided in create mode', (tester) async {
+      await tester.pumpWidget(createTestWidget(const AddEditNoteScreen(
+        initialCategory: NoteCategory.work,
+      )));
+
+      final workBadge = tester.widget<CategoryBadge>(
+        find.byWidgetPredicate((w) => w is CategoryBadge && w.category == NoteCategory.work),
+      );
+      expect(workBadge.isSelected, isTrue);
     });
   });
 }
