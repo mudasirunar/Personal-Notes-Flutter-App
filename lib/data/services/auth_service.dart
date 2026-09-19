@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../core/utils/avatar_utils.dart';
 
 class AuthService {
   final FirebaseAuth? _authInstance;
@@ -74,6 +75,7 @@ class AuthService {
           'lastName': lName,
           'fullName': computedFullName,
           'email': email.trim().toLowerCase(),
+          'avatarColorIndex': AvatarUtils.getColorIndex(credential.user!.uid, email),
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));

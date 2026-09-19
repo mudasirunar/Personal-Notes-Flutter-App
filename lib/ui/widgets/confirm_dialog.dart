@@ -7,6 +7,7 @@ class ConfirmDialog extends StatelessWidget {
   final String confirmLabel;
   final String cancelLabel;
   final bool isDestructive;
+  final bool isLoading;
   final VoidCallback onConfirm;
 
   const ConfirmDialog({
@@ -16,6 +17,7 @@ class ConfirmDialog extends StatelessWidget {
     this.confirmLabel = 'Confirm',
     this.cancelLabel = 'Cancel',
     this.isDestructive = false,
+    this.isLoading = false,
     required this.onConfirm,
   });
 
@@ -26,16 +28,18 @@ class ConfirmDialog extends StatelessWidget {
     String confirmLabel = 'Confirm',
     String cancelLabel = 'Cancel',
     bool isDestructive = false,
+    bool isLoading = false,
   }) async {
     final result = await showDialog<bool>(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: !isLoading,
       builder: (context) => ConfirmDialog(
         title: title,
         message: message,
         confirmLabel: confirmLabel,
         cancelLabel: cancelLabel,
         isDestructive: isDestructive,
+        isLoading: isLoading,
         onConfirm: () => Navigator.of(context).pop(true),
       ),
     );
@@ -44,45 +48,61 @@ class ConfirmDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final isLandscape =
+        mediaQuery.orientation == Orientation.landscape || mediaQuery.size.height < 500;
     final isDark = AppColors.isDark(context);
+    final confirmBgColor = isDestructive
+        ? (isDark ? AppColors.errorDark : AppColors.error)
+        : (isDark ? AppColors.accent : AppColors.primary);
 
     return AlertDialog(
+      scrollable: true,
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: 24,
+        vertical: isLandscape ? 12 : 24,
+      ),
       backgroundColor: AppColors.cardSurfaceOf(context),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: AppColors.borderOf(context), width: 1),
       ),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: AppColors.textPrimaryOf(context),
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
+      title: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 380),
+        child: Text(
+          title,
+          style: TextStyle(
+            color: AppColors.textPrimaryOf(context),
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
-      content: Text(
-        message,
-        style: TextStyle(
-          color: AppColors.textSecondaryOf(context),
-          fontSize: 14,
-          height: 1.4,
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 380),
+        child: Text(
+          message,
+          style: TextStyle(
+            color: AppColors.textSecondaryOf(context),
+            fontSize: 14,
+            height: 1.4,
+          ),
         ),
       ),
       actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
+          onPressed: isLoading ? null : () => Navigator.of(context).pop(false),
           style: TextButton.styleFrom(
             foregroundColor: AppColors.textSecondaryOf(context),
           ),
           child: Text(cancelLabel),
         ),
         ElevatedButton(
-          onPressed: onConfirm,
+          onPressed: isLoading ? null : onConfirm,
           style: ElevatedButton.styleFrom(
-            backgroundColor: isDestructive
-                ? (isDark ? AppColors.errorDark : AppColors.error)
-                : (isDark ? AppColors.accent : AppColors.primary),
+            backgroundColor: confirmBgColor,
+            disabledBackgroundColor: confirmBgColor.withValues(alpha: 0.65),
             foregroundColor: Colors.white,
             minimumSize: const Size(88, 40),
             elevation: 0,
@@ -90,7 +110,16 @@ class ConfirmDialog extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          child: Text(confirmLabel),
+          child: isLoading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : Text(confirmLabel),
         ),
       ],
     );

@@ -10,6 +10,8 @@ import '../../widgets/confirm_dialog.dart';
 import '../../widgets/empty_state_view.dart';
 import '../../widgets/note_card.dart';
 import '../../widgets/skeleton_loader.dart';
+import '../../widgets/user_avatar.dart';
+import '../../widgets/user_profile_dialog.dart';
 import 'add_edit_note_screen.dart';
 
 class NotesHomeScreen extends StatefulWidget {
@@ -36,6 +38,34 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
     );
   }
 
+  void _openProfileDialog({
+    required String? fullName,
+    required String? email,
+    required String? userId,
+    required List<NoteModel> allNotes,
+  }) {
+    final personalCount =
+        allNotes.where((n) => n.category == NoteCategory.personal).length;
+    final workCount =
+        allNotes.where((n) => n.category == NoteCategory.work).length;
+    final studyCount =
+        allNotes.where((n) => n.category == NoteCategory.study).length;
+    final favoriteCount = allNotes.where((n) => n.isFavorite).length;
+
+    UserProfileDialog.show(
+      context,
+      fullName: fullName,
+      email: email,
+      userId: userId,
+      totalNotes: allNotes.length,
+      personalNotes: personalCount,
+      workNotes: workCount,
+      studyNotes: studyCount,
+      favoriteNotes: favoriteCount,
+      onLogoutPressed: _handleLogout,
+    );
+  }
+
   Future<void> _handleLogout() async {
     final confirmed = await ConfirmDialog.show(
       context,
@@ -43,7 +73,7 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
       message: 'Are you sure you want to log out of your notes space?',
       confirmLabel: 'Log Out',
       cancelLabel: 'Cancel',
-      isDestructive: false,
+      isDestructive: true,
     );
 
     if (confirmed && mounted) {
@@ -74,42 +104,55 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.scaffoldBackgroundOf(context),
         elevation: 0,
-        titleSpacing: 20,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        titleSpacing: 16,
+        title: Row(
           children: [
-            Text(
-              greetingTitle,
-              style: TextStyle(
-                color: AppColors.textPrimaryOf(context),
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.4,
+            UserAvatar(
+              name: displayName,
+              email: userEmail,
+              userId: authProvider.userId,
+              size: 42,
+              isLoading: !authProvider.isInitialized,
+              onTap: () => _openProfileDialog(
+                fullName: displayName,
+                email: userEmail,
+                userId: authProvider.userId,
+                allNotes: notesProvider.allNotes,
               ),
             ),
-            const SizedBox(height: 2),
-            Text(
-              userEmail,
-              style: TextStyle(
-                color: AppColors.textMutedOf(context),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    greetingTitle,
+                    style: TextStyle(
+                      color: AppColors.textPrimaryOf(context),
+                      fontSize: 19,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.4,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    userEmail,
+                    style: TextStyle(
+                      color: AppColors.textMutedOf(context),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.logout_rounded,
-              color: AppColors.textSecondaryOf(context),
-              size: 22,
-            ),
-            tooltip: 'Log out',
-            onPressed: _handleLogout,
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: SafeArea(
         bottom: false,
@@ -346,7 +389,7 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: isSelected
-              ? (isDark ? AppColors.cardSurfaceDark : const Color(0xFF0F172A))
+              ? (isDark ? AppColors.primaryDark : AppColors.primary)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
@@ -360,7 +403,7 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
           label,
           style: TextStyle(
             color: isSelected
-                ? (isDark ? AppColors.textPrimaryDark : Colors.white)
+                ? Colors.white
                 : AppColors.textSecondaryOf(context),
             fontSize: 11,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
