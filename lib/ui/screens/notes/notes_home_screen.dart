@@ -164,53 +164,63 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
               child: Column(
                 children: [
                   // Search Input
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.cardSurfaceOf(context),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.borderOf(context),
-                        width: 1,
-                      ),
+                  TextField(
+                    controller: _searchController,
+                    onChanged: (val) => notesProvider.setSearchQuery(val),
+                    style: TextStyle(
+                      color: AppColors.textPrimaryOf(context),
+                      fontSize: 14.5,
                     ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (val) => notesProvider.setSearchQuery(val),
-                      style: TextStyle(
-                        color: AppColors.textPrimaryOf(context),
-                        fontSize: 14.5,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: AppColors.cardSurfaceOf(context),
+                      hintText: 'Search notes...',
+                      hintStyle: TextStyle(
+                        color: AppColors.textMutedOf(context),
+                        fontSize: 14,
                       ),
-                      decoration: InputDecoration(
-                        hintText: 'Search notes by title...',
-                        hintStyle: TextStyle(
-                          color: AppColors.textMutedOf(context),
-                          fontSize: 14,
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        color: AppColors.textMutedOf(context),
+                        size: 20,
+                      ),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.close_rounded,
+                                color: AppColors.textMutedOf(context),
+                                size: 18,
+                              ),
+                              onPressed: () {
+                                _searchController.clear();
+                                notesProvider.setSearchQuery('');
+                              },
+                            )
+                          : null,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: AppColors.borderOf(context),
+                          width: 1,
                         ),
-                        prefixIcon: Icon(
-                          Icons.search_rounded,
-                          color: AppColors.textMutedOf(context),
-                          size: 20,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: AppColors.borderOf(context),
+                          width: 1,
                         ),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: Icon(
-                                  Icons.close_rounded,
-                                  color: AppColors.textMutedOf(context),
-                                  size: 18,
-                                ),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  notesProvider.setSearchQuery('');
-                                },
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 13,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: AppColors.primary,
+                          width: 1.5,
                         ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 13,
                       ),
                     ),
                   ),

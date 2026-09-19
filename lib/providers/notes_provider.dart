@@ -51,11 +51,12 @@ class NotesProvider extends ChangeNotifier {
         return false;
       }
 
-      // 3. Search query check (case-insensitive on title)
+      // 3. Search query check (case-insensitive on both title and description/content)
       if (_searchQuery.trim().isNotEmpty) {
         final query = _searchQuery.trim().toLowerCase();
         final matchesTitle = note.title.toLowerCase().contains(query);
-        if (!matchesTitle) {
+        final matchesContent = note.content.toLowerCase().contains(query);
+        if (!matchesTitle && !matchesContent) {
           return false;
         }
       }

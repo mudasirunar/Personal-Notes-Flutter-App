@@ -181,6 +181,13 @@ void main() {
 
       expect(find.text('Sprint Planning'), findsOneWidget);
       expect(find.text('Grocery List'), findsNothing);
+
+      // Search by description/content
+      await tester.enterText(find.byType(TextField), 'eggs');
+      await tester.pump();
+
+      expect(find.text('Grocery List'), findsOneWidget);
+      expect(find.text('Sprint Planning'), findsNothing);
     });
   });
 
