@@ -6,6 +6,14 @@ import '../data/models/note_model.dart';
 import '../data/services/analytics_service.dart';
 import '../data/services/notes_service.dart';
 
+enum NotesFilter {
+  all,
+  favorites,
+  personal,
+  work,
+  study,
+}
+
 class NotesProvider extends ChangeNotifier {
   final NotesService _notesService;
   final AnalyticsService _analyticsService;
@@ -16,8 +24,9 @@ class NotesProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
-  // Filters and Search
+  // Single mutually-exclusive active filter and Search
   String _searchQuery = '';
+  NotesFilter _currentFilter = NotesFilter.all;
   bool _favoritesOnly = false;
   NoteCategory? _selectedCategory;
 
@@ -35,23 +44,32 @@ class NotesProvider extends ChangeNotifier {
   bool get isSaving => _isSaving;
   String? get errorMessage => _errorMessage;
   String get searchQuery => _searchQuery;
+  NotesFilter get currentFilter => _currentFilter;
   bool get favoritesOnly => _favoritesOnly;
   NoteCategory? get selectedCategory => _selectedCategory;
 
-  /// Combined filter: Case-insensitive search query + Favorites filter + Category filter
+  /// Combined filter: Single active filter (all / fav / category) + search query
   List<NoteModel> get filteredNotes {
     return _notes.where((note) {
-      // 1. Favorites check
-      if (_favoritesOnly && !note.isFavorite) {
-        return false;
+      // 1. Single active filter check
+      switch (_currentFilter) {
+        case NotesFilter.all:
+          break;
+        case NotesFilter.favorites:
+          if (!note.isFavorite) return false;
+          break;
+        case NotesFilter.personal:
+          if (note.category != NoteCategory.personal) return false;
+          break;
+        case NotesFilter.work:
+          if (note.category != NoteCategory.work) return false;
+          break;
+        case NotesFilter.study:
+          if (note.category != NoteCategory.study) return false;
+          break;
       }
 
-      // 2. Category check
-      if (_selectedCategory != null && note.category != _selectedCategory) {
-        return false;
-      }
-
-      // 3. Search query check (case-insensitive on both title and description/content)
+      // 2. Search query check (case-insensitive on both title and description/content)
       if (_searchQuery.trim().isNotEmpty) {
         final query = _searchQuery.trim().toLowerCase();
         final matchesTitle = note.title.toLowerCase().contains(query);
@@ -77,6 +95,7 @@ class NotesProvider extends ChangeNotifier {
     // 2. Immediate synchronous data wipe to avoid any state leakage
     _notes = [];
     _searchQuery = '';
+    _currentFilter = NotesFilter.all;
     _favoritesOnly = false;
     _selectedCategory = null;
     _errorMessage = null;
@@ -128,18 +147,44 @@ class NotesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setFavoritesOnly(bool value) {
-    _favoritesOnly = value;
+  void setFilter(NotesFilter filter) {
+    if (_currentFilter == filter) return;
+    _currentFilter = filter;
+    _favoritesOnly = filter == NotesFilter.favorites;
+    _selectedCategory = switch (filter) {
+      NotesFilter.personal => NoteCategory.personal,
+      NotesFilter.work => NoteCategory.work,
+      NotesFilter.study => NoteCategory.study,
+      _ => null,
+    };
     notifyListeners();
   }
 
+  void setFavoritesOnly(bool value) {
+    setFilter(value ? NotesFilter.favorites : NotesFilter.all);
+  }
+
   void setSelectedCategory(NoteCategory? category) {
-    _selectedCategory = category;
-    notifyListeners();
+    if (category == null) {
+      setFilter(NotesFilter.all);
+    } else {
+      switch (category) {
+        case NoteCategory.personal:
+          setFilter(NotesFilter.personal);
+          break;
+        case NoteCategory.work:
+          setFilter(NotesFilter.work);
+          break;
+        case NoteCategory.study:
+          setFilter(NotesFilter.study);
+          break;
+      }
+    }
   }
 
   void clearFilters() {
     _searchQuery = '';
+    _currentFilter = NotesFilter.all;
     _favoritesOnly = false;
     _selectedCategory = null;
     notifyListeners();

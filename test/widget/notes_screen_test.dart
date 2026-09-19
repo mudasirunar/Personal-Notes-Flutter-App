@@ -189,6 +189,87 @@ void main() {
       expect(find.text('Grocery List'), findsOneWidget);
       expect(find.text('Sprint Planning'), findsNothing);
     });
+
+    testWidgets('renders all 5 filter chips and filters notes mutually exclusively', (tester) async {
+      final sampleNotes = [
+        NoteModel(
+          id: 'note-1',
+          title: 'Work Note 1',
+          content: 'Work content',
+          category: NoteCategory.work,
+          isFavorite: true,
+          createdAt: DateTime(2026, 9, 18, 10, 0),
+          updatedAt: DateTime(2026, 9, 18, 10, 0),
+        ),
+        NoteModel(
+          id: 'note-2',
+          title: 'Personal Note 1',
+          content: 'Personal content',
+          category: NoteCategory.personal,
+          isFavorite: false,
+          createdAt: DateTime(2026, 9, 18, 9, 0),
+          updatedAt: DateTime(2026, 9, 18, 9, 0),
+        ),
+        NoteModel(
+          id: 'note-3',
+          title: 'Study Note 1',
+          content: 'Study content',
+          category: NoteCategory.study,
+          isFavorite: true,
+          createdAt: DateTime(2026, 9, 18, 8, 0),
+          updatedAt: DateTime(2026, 9, 18, 8, 0),
+        ),
+      ];
+
+      fakeNotesService.emit(sampleNotes);
+
+      await tester.pumpWidget(createTestWidget(const NotesHomeScreen()));
+      await tester.pump();
+
+      // Verify all 5 chips exist
+      expect(find.text('All'), findsOneWidget);
+      expect(find.text('Favorites'), findsOneWidget);
+      expect(find.text('Personal'), findsWidgets);
+      expect(find.text('Work'), findsWidgets);
+      expect(find.text('Study'), findsWidgets);
+
+      // Initially All (all 3 notes visible)
+      expect(find.text('Work Note 1'), findsOneWidget);
+      expect(find.text('Personal Note 1'), findsOneWidget);
+      expect(find.text('Study Note 1'), findsOneWidget);
+
+      // Tap Favorites -> only note-1 and note-3
+      await tester.tap(find.text('Favorites'));
+      await tester.pump();
+
+      expect(find.text('Work Note 1'), findsOneWidget);
+      expect(find.text('Study Note 1'), findsOneWidget);
+      expect(find.text('Personal Note 1'), findsNothing);
+
+      // Tap Personal chip -> only note-2
+      await tester.tap(find.text('Personal').first);
+      await tester.pump();
+
+      expect(find.text('Personal Note 1'), findsOneWidget);
+      expect(find.text('Work Note 1'), findsNothing);
+      expect(find.text('Study Note 1'), findsNothing);
+
+      // Tap Work chip -> only note-1
+      await tester.tap(find.text('Work').first);
+      await tester.pump();
+
+      expect(find.text('Work Note 1'), findsOneWidget);
+      expect(find.text('Personal Note 1'), findsNothing);
+      expect(find.text('Study Note 1'), findsNothing);
+
+      // Tap All chip -> restores all 3
+      await tester.tap(find.text('All'));
+      await tester.pump();
+
+      expect(find.text('Work Note 1'), findsOneWidget);
+      expect(find.text('Personal Note 1'), findsOneWidget);
+      expect(find.text('Study Note 1'), findsOneWidget);
+    });
   });
 
   group('AddEditNoteScreen Tests', () {

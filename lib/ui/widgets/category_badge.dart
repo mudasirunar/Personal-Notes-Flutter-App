@@ -14,20 +14,20 @@ class CategoryBadge extends StatelessWidget {
     this.onTap,
   });
 
-  Color _categoryBaseColor(bool isDark) {
+  Color _categoryBaseColor() {
     switch (category) {
       case NoteCategory.personal:
-        return isDark ? const Color(0xFF818CF8) : AppColors.categoryPersonal;
+        return AppColors.categoryPersonal;
       case NoteCategory.work:
-        return isDark ? const Color(0xFFFBBF24) : AppColors.categoryWork;
+        return AppColors.categoryWork;
       case NoteCategory.study:
-        return isDark ? const Color(0xFF34D399) : AppColors.categoryStudy;
+        return AppColors.categoryStudy;
     }
   }
 
   Color _backgroundColor(bool isDark) {
-    if (isSelected) return _categoryBaseColor(isDark);
-    if (isDark) return _categoryBaseColor(isDark).withValues(alpha: 0.15);
+    if (isSelected) return _categoryBaseColor();
+    if (isDark) return _categoryBaseColor().withValues(alpha: 0.15);
     switch (category) {
       case NoteCategory.personal:
         return AppColors.categoryPersonalBg;
@@ -40,7 +40,7 @@ class CategoryBadge extends StatelessWidget {
 
   Color _textColor(bool isDark) {
     if (isSelected) return Colors.white;
-    return _categoryBaseColor(isDark);
+    return _categoryBaseColor();
   }
 
   @override

@@ -203,7 +203,7 @@ class UserProfileDialog extends StatelessWidget {
                       label: NoteCategory.personal.label,
                       count: personalNotes,
                       icon: NoteCategory.personal.icon,
-                      color: isDark ? const Color(0xFF818CF8) : AppColors.categoryPersonal,
+                      color: AppColors.categoryPersonal,
                       bgColor: isDark
                           ? const Color(0xFF1E293B)
                           : AppColors.categoryPersonalBg,
@@ -216,7 +216,7 @@ class UserProfileDialog extends StatelessWidget {
                       label: NoteCategory.work.label,
                       count: workNotes,
                       icon: NoteCategory.work.icon,
-                      color: isDark ? const Color(0xFFFBBF24) : AppColors.categoryWork,
+                      color: AppColors.categoryWork,
                       bgColor: isDark
                           ? const Color(0xFF1E293B)
                           : AppColors.categoryWorkBg,
@@ -233,7 +233,7 @@ class UserProfileDialog extends StatelessWidget {
                       label: NoteCategory.study.label,
                       count: studyNotes,
                       icon: NoteCategory.study.icon,
-                      color: isDark ? const Color(0xFF34D399) : AppColors.categoryStudy,
+                      color: AppColors.categoryStudy,
                       bgColor: isDark
                           ? const Color(0xFF1E293B)
                           : AppColors.categoryStudyBg,

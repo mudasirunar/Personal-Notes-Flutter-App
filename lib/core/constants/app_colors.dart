@@ -33,18 +33,19 @@ class AppColors {
   static const Color successLight = Color(0xFFF0FDF4); // Green 50
 
   // Favorites
-  static const Color favorite = Color(0xFFEAB308); // Yellow 500
+  static const Color favorite = Color(0xFFD97706); // Amber 600
+  static const Color favoriteBg = Color(0xFFFFFBEB); // Amber 50
   static const Color favoriteInactive = Color(0xFFCBD5E1); // Slate 300
 
   // Category Tints
-  static const Color categoryPersonal = Color(0xFF4F46E5); // Indigo
-  static const Color categoryPersonalBg = Color(0xFFEEF2FF);
+  static const Color categoryPersonal = Color(0xFF0891B2); // Cyan 600 - Ocean Aqua
+  static const Color categoryPersonalBg = Color(0xFFECFEFF); // Cyan 50
 
-  static const Color categoryWork = Color(0xFFD97706); // Amber 600
-  static const Color categoryWorkBg = Color(0xFFFFFBEB);
+  static const Color categoryWork = Color(0xFF2563EB); // Royal Blue 600 (distinct from favorite Amber)
+  static const Color categoryWorkBg = Color(0xFFEFF6FF); // Blue 50
 
   static const Color categoryStudy = Color(0xFF059669); // Emerald 600
-  static const Color categoryStudyBg = Color(0xFFECFDF5);
+  static const Color categoryStudyBg = Color(0xFFECFDF5); // Emerald 50
 
   // Shimmer / Skeleton
   static const Color shimmerBase = Color(0xFFE2E8F0);

@@ -5,7 +5,6 @@ import '../../../core/constants/app_constants.dart';
 import '../../../data/models/note_model.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/notes_provider.dart';
-import '../../widgets/category_badge.dart';
 import '../../widgets/confirm_dialog.dart';
 import '../../widgets/empty_state_view.dart';
 import '../../widgets/note_card.dart';
@@ -85,10 +84,20 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
   Widget build(BuildContext context) {
     final notesProvider = context.watch<NotesProvider>();
     final authProvider = context.watch<AuthProvider>();
-    final isDark = AppColors.isDark(context);
 
     final filteredNotes = notesProvider.filteredNotes;
     final totalNotesCount = notesProvider.allNotes.length;
+    final favoriteCount =
+        notesProvider.allNotes.where((n) => n.isFavorite).length;
+    final personalCount = notesProvider.allNotes
+        .where((n) => n.category == NoteCategory.personal)
+        .length;
+    final workCount = notesProvider.allNotes
+        .where((n) => n.category == NoteCategory.work)
+        .length;
+    final studyCount = notesProvider.allNotes
+        .where((n) => n.category == NoteCategory.study)
+        .length;
     final displayName = authProvider.displayName;
     final firstName = authProvider.firstName;
     final userEmail = authProvider.userEmail ?? 'User';
@@ -226,69 +235,65 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Filter Row: All/Favorites Toggle + Category Chips
-                  Row(
-                    children: [
-                      // View Tabs: All vs Favorites
-                      Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? const Color(0xFF1E293B)
-                              : const Color(0xFFE2E8F0).withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(10),
+                  // Horizontal Filter Chips: All, Favorites, Personal, Work, Study
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        // ── 1. All (Primary theme color, no icon) ──
+                        _buildFilterChip(
+                          label: 'All',
+                          count: totalNotesCount,
+                          color: AppColors.primary,
+                          isSelected: notesProvider.currentFilter == NotesFilter.all,
+                          onTap: () => notesProvider.setFilter(NotesFilter.all),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildTabChip(
-                              label: 'All',
-                              count: totalNotesCount,
-                              isSelected: !notesProvider.favoritesOnly,
-                              onTap: () => notesProvider.setFavoritesOnly(false),
-                            ),
-                            _buildTabChip(
-                              label: 'Favorites',
-                              icon: Icons.star_rounded,
-                              isSelected: notesProvider.favoritesOnly,
-                              onTap: () => notesProvider.setFavoritesOnly(true),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
+                        const SizedBox(width: 8),
 
-                      // Horizontal Category Filter Chips
-                      Expanded(
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              _buildCategoryFilterChip(
-                                label: 'All Categories',
-                                isSelected: notesProvider.selectedCategory == null,
-                                onTap: () => notesProvider.setSelectedCategory(null),
-                              ),
-                              const SizedBox(width: 6),
-                              for (final category in NoteCategory.values) ...[
-                                CategoryBadge(
-                                  category: category,
-                                  isSelected: notesProvider.selectedCategory == category,
-                                  onTap: () {
-                                    if (notesProvider.selectedCategory == category) {
-                                      notesProvider.setSelectedCategory(null);
-                                    } else {
-                                      notesProvider.setSelectedCategory(category);
-                                    }
-                                  },
-                                ),
-                                const SizedBox(width: 6),
-                              ],
-                            ],
-                          ),
+                        // ── 2. Favorites (Amber color, star icon) ──
+                        _buildFilterChip(
+                          label: 'Favorites',
+                          icon: Icons.star_rounded,
+                          count: favoriteCount,
+                          color: AppColors.favorite,
+                          isSelected: notesProvider.currentFilter == NotesFilter.favorites,
+                          onTap: () => notesProvider.setFilter(NotesFilter.favorites),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+
+                        // ── 3. Personal (Violet color, person icon) ──
+                        _buildFilterChip(
+                          label: 'Personal',
+                          icon: NoteCategory.personal.icon,
+                          count: personalCount,
+                          color: AppColors.categoryPersonal,
+                          isSelected: notesProvider.currentFilter == NotesFilter.personal,
+                          onTap: () => notesProvider.setFilter(NotesFilter.personal),
+                        ),
+                        const SizedBox(width: 8),
+
+                        // ── 4. Work (Royal Blue color, work icon) ──
+                        _buildFilterChip(
+                          label: 'Work',
+                          icon: NoteCategory.work.icon,
+                          count: workCount,
+                          color: AppColors.categoryWork,
+                          isSelected: notesProvider.currentFilter == NotesFilter.work,
+                          onTap: () => notesProvider.setFilter(NotesFilter.work),
+                        ),
+                        const SizedBox(width: 8),
+
+                        // ── 5. Study (Emerald color, book icon) ──
+                        _buildFilterChip(
+                          label: 'Study',
+                          icon: NoteCategory.study.icon,
+                          count: studyCount,
+                          color: AppColors.categoryStudy,
+                          isSelected: notesProvider.currentFilter == NotesFilter.study,
+                          onTap: () => notesProvider.setFilter(NotesFilter.study),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -312,31 +317,40 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
     );
   }
 
-  Widget _buildTabChip({
+  Widget _buildFilterChip({
     required String label,
     IconData? icon,
-    int? count,
+    required int count,
+    required Color color,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
     final isDark = AppColors.isDark(context);
+    // Colors of chips are identical irrespective of theme in both light and dark modes
+    final chipColor = color;
+    final unselectedBg = isDark
+        ? chipColor.withValues(alpha: 0.14)
+        : chipColor.withValues(alpha: 0.08);
+    final unselectedBorder = chipColor.withValues(alpha: isDark ? 0.35 : 0.28);
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected
-              ? (isDark ? AppColors.cardSurfaceDark : Colors.white)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          color: isSelected ? chipColor : unselectedBg,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? Colors.transparent : unselectedBorder,
+            width: 1,
+          ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 3,
-                    offset: const Offset(0, 1),
+                    color: chipColor.withValues(alpha: 0.35),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   ),
                 ]
               : null,
@@ -348,76 +362,38 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
               Icon(
                 icon,
                 size: 14,
-                color: isSelected ? AppColors.favorite : AppColors.textMutedOf(context),
+                color: isSelected ? Colors.white : chipColor,
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 5),
             ],
             Text(
               label,
               style: TextStyle(
-                color: isSelected
-                    ? AppColors.textPrimaryOf(context)
-                    : AppColors.textSecondaryOf(context),
+                color: isSelected ? Colors.white : chipColor,
                 fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                letterSpacing: 0.1,
               ),
             ),
-            if (count != null && count > 0) ...[
-              const SizedBox(width: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '$count',
-                  style: TextStyle(
-                    color: AppColors.textSecondaryOf(context),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                  ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.28)
+                    : chipColor.withValues(alpha: isDark ? 0.20 : 0.14),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  color: isSelected ? Colors.white : chipColor,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            ],
+            ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryFilterChip({
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    final isDark = AppColors.isDark(context);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? (isDark ? AppColors.primaryDark : AppColors.primary)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? Colors.transparent
-                : AppColors.borderOf(context),
-            width: 1,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected
-                ? Colors.white
-                : AppColors.textSecondaryOf(context),
-            fontSize: 11,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-          ),
         ),
       ),
     );
@@ -483,9 +459,9 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
         );
       }
 
-      if (notesProvider.favoritesOnly) {
+      if (notesProvider.currentFilter == NotesFilter.favorites) {
         return EmptyStateView.noFavorites(
-          onViewAll: () => notesProvider.setFavoritesOnly(false),
+          onViewAll: () => notesProvider.setFilter(NotesFilter.all),
         );
       }
 
