@@ -64,6 +64,29 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
     );
   }
 
+  Future<void> _deleteNote(NotesProvider notesProvider, NoteModel note) async {
+    final error = await notesProvider.deleteNote(note.id);
+    if (mounted) {
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor: AppColors.errorOf(context),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Note "${note.title.isNotEmpty ? note.title : 'Untitled'}" deleted'),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
   NoteCategory? _getPreselectedCategory(NotesFilter filter) {
     switch (filter) {
       case NotesFilter.personal:
@@ -169,7 +192,11 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
         children: [
           // 1. Content Feed & States (underneath translucent header)
           Positioned.fill(
-            child: _buildContent(notesProvider, filteredNotes, headerHeight),
+            child: SafeArea(
+              top: false,
+              bottom: false,
+              child: _buildContent(notesProvider, filteredNotes, headerHeight),
+            ),
           ),
 
           // 2. Translucent Frosted Glass Header (Avatar, Name, Email, Search Bar, Filter Chips)
@@ -222,21 +249,21 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
 
     return ClipRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () {}, // Blocks touches from bleeding through to note cards behind
           child: Container(
             decoration: BoxDecoration(
-              // Higher translucency (~50%) so notes behind are clearly visible
-              color: isDark
-                  ? const Color(0xFF0A0E1A).withValues(alpha: 0.48)
-                  : Colors.white.withValues(alpha: 0.52),
+              // Perfectly matches scaffold background tone with frosted translucency
+              color: AppColors.scaffoldBackgroundOf(context).withValues(
+                alpha: isDark ? 0.72 : 0.78,
+              ),
               border: Border(
                 bottom: BorderSide(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.12)
-                      : Colors.black.withValues(alpha: 0.08),
+                  color: AppColors.borderOf(context).withValues(
+                    alpha: isDark ? 0.35 : 0.55,
+                  ),
                   width: 1,
                 ),
               ),
@@ -323,8 +350,8 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: isDark
-                            ? const Color(0xFF1E293B).withValues(alpha: 0.40)
-                            : const Color(0xFFF1F5F9).withValues(alpha: 0.45),
+                            ? AppColors.cardSurfaceDark.withValues(alpha: 0.60)
+                            : AppColors.cardSurface.withValues(alpha: 0.85),
                         hintText: 'Search notes...',
                         hintStyle: TextStyle(
                           color: AppColors.textMutedOf(context),
@@ -352,14 +379,18 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: AppColors.borderOf(context).withValues(alpha: 0.5),
+                            color: AppColors.borderOf(context).withValues(
+                              alpha: isDark ? 0.35 : 0.60,
+                            ),
                             width: 1,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: AppColors.borderOf(context).withValues(alpha: 0.5),
+                            color: AppColors.borderOf(context).withValues(
+                              alpha: isDark ? 0.35 : 0.60,
+                            ),
                             width: 1,
                           ),
                         ),
@@ -640,11 +671,17 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
         itemCount: filteredNotes.length,
         itemBuilder: (context, index) {
           final note = filteredNotes[index];
+          final showCategory = notesProvider.currentFilter == NotesFilter.all ||
+              notesProvider.currentFilter == NotesFilter.favorites;
           return NoteCard(
             key: ValueKey(note.id),
             note: note,
+            showCategory: showCategory,
+            isInsideFavoritesFilter:
+                notesProvider.currentFilter == NotesFilter.favorites,
             onTap: () => _openAddEditNote(note),
             onToggleFavorite: () => notesProvider.toggleFavorite(note),
+            onDelete: () => _deleteNote(notesProvider, note),
           );
         },
       ),

@@ -49,7 +49,7 @@ class NotesService {
     );
   }
 
-  /// Toggle favorite status of a note
+  /// Toggle favorite status of a note without modifying its chronological updatedAt
   Future<void> toggleFavorite({
     required String userId,
     required String noteId,
@@ -57,7 +57,6 @@ class NotesService {
   }) async {
     await _userNotesCollection(userId).doc(noteId).update({
       'isFavorite': !currentStatus,
-      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 

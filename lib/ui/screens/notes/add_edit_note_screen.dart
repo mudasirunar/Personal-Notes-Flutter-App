@@ -7,6 +7,7 @@ import '../../../data/models/note_model.dart';
 import '../../../providers/notes_provider.dart';
 import '../../widgets/category_badge.dart';
 import '../../widgets/confirm_dialog.dart';
+import '../../widgets/delete_note_dialog.dart';
 import '../../widgets/primary_button.dart';
 
 class AddEditNoteScreen extends StatefulWidget {
@@ -104,13 +105,9 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
   Future<void> _handleDelete() async {
     if (!widget.isEditing) return;
 
-    final confirmed = await ConfirmDialog.show(
+    final confirmed = await DeleteNoteDialog.show(
       context,
-      title: 'Delete Note',
-      message: 'Are you sure you want to delete "${widget.note!.title}"? This action cannot be undone.',
-      confirmLabel: 'Delete',
-      cancelLabel: 'Cancel',
-      isDestructive: true,
+      noteTitle: widget.note!.title,
     );
 
     if (confirmed && mounted) {

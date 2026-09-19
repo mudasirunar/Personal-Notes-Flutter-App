@@ -171,5 +171,41 @@ void main() {
       expect(results[0].title, equals('Zebra'));
       expect(results[1].title, equals('Apple'));
     });
+
+    test('favoriting a note retains chronological order without jumping to top', () async {
+      final note1 = NoteModel(
+        id: '1',
+        title: 'Older Note',
+        content: 'Content',
+        category: NoteCategory.personal,
+        isFavorite: false,
+        updatedAt: DateTime(2026, 9, 1),
+      );
+      final note2 = NoteModel(
+        id: '2',
+        title: 'Newer Note',
+        content: 'Content',
+        category: NoteCategory.personal,
+        isFavorite: false,
+        updatedAt: DateTime(2026, 9, 10),
+      );
+
+      // List ordered by newest updated first: note2 then note1
+      notesService.emit([note2, note1]);
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      expect(provider.filteredNotes.first.id, equals('2'));
+      expect(provider.filteredNotes.last.id, equals('1'));
+
+      // Toggle favorite on older note without updating updatedAt
+      final updatedNote1 = note1.copyWith(isFavorite: true);
+      notesService.emit([note2, updatedNote1]);
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      // Order must be preserved: note2 remains first, note1 remains last
+      expect(provider.filteredNotes.first.id, equals('2'));
+      expect(provider.filteredNotes.last.id, equals('1'));
+      expect(provider.filteredNotes.last.isFavorite, isTrue);
+    });
   });
 }

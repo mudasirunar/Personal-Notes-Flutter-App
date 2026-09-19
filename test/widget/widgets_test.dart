@@ -4,6 +4,7 @@ import 'package:personal_notes_app/core/constants/app_constants.dart';
 import 'package:personal_notes_app/core/theme/app_theme.dart';
 import 'package:personal_notes_app/data/models/note_model.dart';
 import 'package:personal_notes_app/ui/widgets/category_badge.dart';
+import 'package:personal_notes_app/ui/widgets/delete_note_dialog.dart';
 import 'package:personal_notes_app/ui/widgets/empty_state_view.dart';
 import 'package:personal_notes_app/ui/widgets/note_card.dart';
 import 'package:personal_notes_app/ui/widgets/primary_button.dart';
@@ -159,4 +160,84 @@ void main() {
       expect(find.byIcon(Icons.star_border_rounded), findsOneWidget);
     });
   });
+
+  group('DeleteNoteDialog Widget Tests', () {
+    testWidgets('renders title and confirmation message with note name', (tester) async {
+      bool? result;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () async {
+                  result = await DeleteNoteDialog.show(
+                    context,
+                    noteTitle: 'Grocery List',
+                  );
+                },
+                child: const Text('Open Dialog'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open Dialog'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Delete Note'), findsOneWidget);
+      expect(
+        find.text('Are you sure you want to delete "Grocery List"? This action cannot be undone.'),
+        findsOneWidget,
+      );
+      expect(find.text('Cancel'), findsOneWidget);
+      expect(find.text('Delete'), findsOneWidget);
+
+      // Confirm
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      expect(result, isTrue);
+      expect(find.text('Delete Note'), findsNothing);
+    });
+
+    testWidgets('returns false when cancelled or dismissed', (tester) async {
+      bool? result;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () async {
+                  result = await DeleteNoteDialog.show(
+                    context,
+                    noteTitle: '',
+                  );
+                },
+                child: const Text('Open Dialog'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open Dialog'));
+      await tester.pumpAndSettle();
+
+      // Empty title fallback
+      expect(
+        find.text('Are you sure you want to delete "this note"? This action cannot be undone.'),
+        findsOneWidget,
+      );
+
+      // Tap Cancel
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(result, isFalse);
+    });
+  });
 }
+

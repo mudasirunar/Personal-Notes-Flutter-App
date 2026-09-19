@@ -47,6 +47,11 @@ class AppColors {
   static const Color categoryStudy = Color(0xFF059669); // Emerald 600
   static const Color categoryStudyBg = Color(0xFFECFDF5); // Emerald 50
 
+  // Swipe Action Colors
+  static const Color swipeFavorite = Color(0xFFF59E0B); // Amber 500
+  static const Color swipeUnfavorite = Color(0xFF64748B); // Slate 500
+  static const Color swipeDelete = Color(0xFFEF4444); // Red 500
+
   // Shimmer / Skeleton
   static const Color shimmerBase = Color(0xFFE2E8F0);
   static const Color shimmerHighlight = Color(0xFFF8FAFC);
@@ -55,11 +60,12 @@ class AppColors {
   // Dark Theme Palette
   // ---------------------------------------------------------------------------
   static const Color scaffoldBackgroundDark = Color(0xFF0F172A); // Slate 900
-  static const Color cardSurfaceDark = Color(0xFF1E293B); // Slate 800
+  static const Color cardSurfaceDark = Color(0xFF162032); // Deep Midnight Slate (elevated contrast)
   static const Color inputFillDark = Color(0xFF1E293B); // Slate 800
 
   // Dark Borders
   static const Color borderDark = Color(0xFF334155); // Slate 700
+  static const Color cardBorderDark = Color(0x1AFFFFFF); // Subtle white luminescence for cards (10% white)
   static const Color borderFocusedDark = primary;
 
   // Dark Typography (High-contrast, eye-friendly readability)
@@ -89,6 +95,9 @@ class AppColors {
 
   static Color borderOf(BuildContext context) =>
       isDark(context) ? borderDark : border;
+
+  static Color cardBorderOf(BuildContext context) =>
+      isDark(context) ? cardBorderDark : border;
 
   static Color textPrimaryOf(BuildContext context) =>
       isDark(context) ? textPrimaryDark : textPrimary;

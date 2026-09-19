@@ -657,6 +657,144 @@ void main() {
       final firstWorkCardTop = tester.getTopLeft(find.text('Work Note 0')).dy;
       expect(firstWorkCardTop, greaterThan(168.0));
     });
+
+    testWidgets('renders category badge in All and Favorites, hides category badge in specific category tabs', (tester) async {
+      final sampleNotes = [
+        NoteModel(
+          id: 'note-1',
+          title: 'Work Note 1',
+          content: 'Work content',
+          category: NoteCategory.work,
+          isFavorite: true,
+          createdAt: DateTime(2026, 9, 18, 10, 0),
+          updatedAt: DateTime(2026, 9, 18, 10, 0),
+        ),
+      ];
+
+      fakeNotesService.emit(sampleNotes);
+
+      await tester.pumpWidget(createTestWidget(const NotesHomeScreen()));
+      await tester.pumpAndSettle();
+
+      // On "All" tab: CategoryBadge must be visible
+      final cardFinder = find.byType(NoteCard);
+      expect(find.descendant(of: cardFinder, matching: find.byType(CategoryBadge)), findsOneWidget);
+
+      // Tap "Favorites" tab: CategoryBadge must still be visible
+      await tester.tap(find.byKey(const ValueKey('filter_chip_favorites')));
+      await tester.pumpAndSettle();
+      expect(find.descendant(of: cardFinder, matching: find.byType(CategoryBadge)), findsOneWidget);
+
+      // Tap "Work" tab: CategoryBadge must be hidden to eliminate redundancy
+      await tester.tap(find.byKey(const ValueKey('filter_chip_work')));
+      await tester.pumpAndSettle();
+      expect(find.descendant(of: cardFinder, matching: find.byType(CategoryBadge)), findsNothing);
+    });
+
+    testWidgets('swiping left to delete note prompts confirmation dialog and deletes on confirm', (tester) async {
+      final sampleNotes = [
+        NoteModel(
+          id: 'note-delete-test',
+          title: 'Note to be deleted',
+          content: 'Content to be deleted',
+          category: NoteCategory.personal,
+          isFavorite: false,
+          createdAt: DateTime(2026, 9, 18, 10, 0),
+          updatedAt: DateTime(2026, 9, 18, 10, 0),
+        ),
+      ];
+
+      fakeNotesService.emit(sampleNotes);
+
+      await tester.pumpWidget(createTestWidget(const NotesHomeScreen()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Note to be deleted'), findsOneWidget);
+
+      // Fling from right to left on the card to trigger swipe-to-delete
+      await tester.fling(find.text('Note to be deleted'), const Offset(-500, 0), 1000);
+      await tester.pumpAndSettle();
+
+      // ConfirmDialog must appear
+      expect(find.text('Delete Note'), findsOneWidget);
+      final dialogDeleteButton = find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Delete'),
+      );
+      expect(dialogDeleteButton, findsOneWidget);
+
+      // Tap Confirm 'Delete'
+      await tester.tap(dialogDeleteButton);
+      await tester.pumpAndSettle();
+
+      // Note should now be removed from service and UI
+      expect(find.text('Note to be deleted'), findsNothing);
+    });
+
+    testWidgets('swiping right toggles favorite and keeps card in list', (tester) async {
+      final sampleNotes = [
+        NoteModel(
+          id: 'note-swipe-fav',
+          title: 'Swipe Fav Note',
+          content: 'Swipe right to toggle favorite',
+          category: NoteCategory.personal,
+          isFavorite: false,
+          createdAt: DateTime(2026, 9, 18, 10, 0),
+          updatedAt: DateTime(2026, 9, 18, 10, 0),
+        ),
+      ];
+
+      fakeNotesService.emit(sampleNotes);
+
+      await tester.pumpWidget(createTestWidget(const NotesHomeScreen()));
+      await tester.pumpAndSettle();
+
+      // Fling from left to right on the card (Offset(500, 0))
+      await tester.fling(find.text('Swipe Fav Note'), const Offset(500, 0), 1000);
+      await tester.pumpAndSettle();
+
+      // Card remains in list
+      expect(find.text('Swipe Fav Note'), findsOneWidget);
+      // Service note should now be marked as favorite
+      expect(fakeNotesService.notes.first.isFavorite, isTrue);
+    });
+
+    testWidgets('swiping left prompts delete confirmation and deletes on confirm', (tester) async {
+      final sampleNotes = [
+        NoteModel(
+          id: 'note-swipe-del',
+          title: 'Swipe Delete Note',
+          content: 'Swipe left to delete',
+          category: NoteCategory.work,
+          isFavorite: false,
+          createdAt: DateTime(2026, 9, 18, 10, 0),
+          updatedAt: DateTime(2026, 9, 18, 10, 0),
+        ),
+      ];
+
+      fakeNotesService.emit(sampleNotes);
+
+      await tester.pumpWidget(createTestWidget(const NotesHomeScreen()));
+      await tester.pumpAndSettle();
+
+      // Fling from right to left on the card (Offset(-500, 0))
+      await tester.fling(find.text('Swipe Delete Note'), const Offset(-500, 0), 1000);
+      await tester.pumpAndSettle();
+
+      // Confirm dialog appears
+      expect(find.text('Delete Note'), findsOneWidget);
+
+      // Confirm deletion in dialog
+      final dialogDeleteButton = find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Delete'),
+      );
+      await tester.tap(dialogDeleteButton);
+      await tester.pumpAndSettle();
+
+      // Card should be gone
+      expect(find.text('Swipe Delete Note'), findsNothing);
+    });
   });
 
   group('AddEditNoteScreen Tests', () {
