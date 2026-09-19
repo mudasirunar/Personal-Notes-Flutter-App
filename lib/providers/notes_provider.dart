@@ -49,8 +49,12 @@ class NotesProvider extends ChangeNotifier {
   NoteCategory? get selectedCategory => _selectedCategory;
 
   /// Combined filter: Single active filter (all / fav / category) + search query
+  /// When search query is active, results are intelligently sorted by relevance:
+  /// - Title matches appear before description matches
+  /// - Prefix/word-start matches appear before substring matches
+  /// - Alphabetical tie-breaking for equal relevance
   List<NoteModel> get filteredNotes {
-    return _notes.where((note) {
+    final filtered = _notes.where((note) {
       // 1. Single active filter check
       switch (_currentFilter) {
         case NotesFilter.all:
@@ -81,6 +85,75 @@ class NotesProvider extends ChangeNotifier {
 
       return true;
     }).toList();
+
+    // 3. Relevance ranking and sorting when search query is active
+    if (_searchQuery.trim().isNotEmpty) {
+      final query = _searchQuery.trim().toLowerCase();
+      filtered.sort((a, b) {
+        final scoreA = _searchRelevanceScore(a, query);
+        final scoreB = _searchRelevanceScore(b, query);
+        if (scoreA != scoreB) {
+          return scoreB.compareTo(scoreA); // Higher relevance score first
+        }
+        // Tie-breaker 1: Alphabetical by title
+        final titleCompare = a.title.toLowerCase().compareTo(b.title.toLowerCase());
+        if (titleCompare != 0) {
+          return titleCompare;
+        }
+        // Tie-breaker 2: Newest updated first
+        final timeA = a.updatedAt ?? a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final timeB = b.updatedAt ?? b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return timeB.compareTo(timeA);
+      });
+    }
+
+    return filtered;
+  }
+
+  /// Calculates search relevance score for a note.
+  /// Higher score means higher priority in search results.
+  ///
+  /// Ranking order:
+  /// 1. Exact title match (1000)
+  /// 2. Title starts with query (900)
+  /// 3. Title contains a word starting with query (800)
+  /// 4. Title contains query anywhere (700 - position index)
+  /// 5. Description/Content starts with query (500)
+  /// 6. Description/Content contains word starting with query (400)
+  /// 7. Description/Content contains query anywhere (300 - position index)
+  int _searchRelevanceScore(NoteModel note, String query) {
+    final title = note.title.toLowerCase();
+    final content = note.content.toLowerCase();
+    final wordBoundaryPattern = RegExp(r'\b' + RegExp.escape(query));
+
+    // 1. Exact title match
+    if (title == query) return 1000;
+
+    // 2. Title starts with query
+    if (title.startsWith(query)) return 900;
+
+    // 3. Title contains word starting with query (e.g. "Sprint Planning" or "(Study)" for "plan" / "stud")
+    if (wordBoundaryPattern.hasMatch(title)) return 800;
+
+    // 4. Title contains query anywhere (earlier in title gets higher priority)
+    if (title.contains(query)) {
+      final index = title.indexOf(query);
+      return 700 - index.clamp(0, 100);
+    }
+
+    // 5. Content starts with query
+    if (content.startsWith(query)) return 500;
+
+    // 6. Content contains word starting with query
+    if (wordBoundaryPattern.hasMatch(content)) return 400;
+
+    // 7. Content contains query anywhere (earlier in content gets higher priority)
+    if (content.contains(query)) {
+      final index = content.indexOf(query);
+      return 300 - index.clamp(0, 100);
+    }
+
+    return 0;
   }
 
   /// Called when the authenticated user changes.
