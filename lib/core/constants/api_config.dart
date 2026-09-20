@@ -4,10 +4,11 @@
 /// Replace [backendResetPasswordUrl] with your deployed Vercel URL.
 class ApiConfig {
   /// Brevo API Key from https://app.brevo.com/settings/keys/api
-  static const String brevoApiKey = String.fromEnvironment(
-    'BREVO_API_KEY',
-    defaultValue:
-        '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',
+  /// Brevo API Key is now safely managed on your Vercel backend environment variables:
+  /// (BREVO_API_KEY) so GitHub/scanners never see or revoke it.
+  static const String backendSendOtpUrl = String.fromEnvironment(
+    'BACKEND_SEND_OTP_URL',
+    defaultValue: 'https://personal-notes-flutter-app.vercel.app/api/send-otp',
   );
 
   /// Verified sender email in your Brevo account (unarmudasir@gmail.com)

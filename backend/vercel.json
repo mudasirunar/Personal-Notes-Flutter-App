@@ -4,12 +4,20 @@
     {
       "src": "api/reset-password.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "api/send-otp.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/reset-password",
       "dest": "api/reset-password.js"
+    },
+    {
+      "src": "/api/send-otp",
+      "dest": "api/send-otp.js"
     }
   ]
 }
