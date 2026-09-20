@@ -37,79 +37,97 @@ class _SkeletonCardState extends State<SkeletonCard>
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
+        final isDark = AppColors.isDark(context);
+        final safeArea = MediaQuery.paddingOf(context);
         final shimmerColor = AppColors.shimmerBaseOf(context).withValues(alpha: _animation.value);
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.cardSurfaceOf(context),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.borderOf(context)),
-          ),
+          color: AppColors.scaffoldBackgroundOf(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header row placeholder (Category badge + favorite icon)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    width: 70,
-                    height: 22,
-                    decoration: BoxDecoration(
-                      color: shimmerColor,
-                      borderRadius: BorderRadius.circular(20),
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  16 + safeArea.left,
+                  12,
+                  16 + safeArea.right,
+                  12,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header row placeholder (Category badge + favorite icon)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          width: 70,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            color: shimmerColor,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: shimmerColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: shimmerColor,
-                      shape: BoxShape.circle,
+                    const SizedBox(height: 12),
+                    // Title placeholder
+                    Container(
+                      width: MediaQuery.of(context).size.width * 0.65,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: shimmerColor,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Title placeholder
-              Container(
-                width: MediaQuery.of(context).size.width * 0.65,
-                height: 16,
-                decoration: BoxDecoration(
-                  color: shimmerColor,
-                  borderRadius: BorderRadius.circular(4),
+                    const SizedBox(height: 10),
+                    // Content placeholder lines
+                    Container(
+                      width: double.infinity,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: shimmerColor,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      width: MediaQuery.of(context).size.width * 0.45,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: shimmerColor,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    // Footer / timestamp placeholder
+                    Container(
+                      width: 90,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: shimmerColor,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 10),
-              // Content placeholder lines
-              Container(
-                width: double.infinity,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: shimmerColor,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                width: MediaQuery.of(context).size.width * 0.45,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: shimmerColor,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              const SizedBox(height: 14),
-              // Footer / timestamp placeholder
-              Container(
-                width: 90,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: shimmerColor,
-                  borderRadius: BorderRadius.circular(4),
-                ),
+              Divider(
+                height: 1,
+                thickness: 1,
+                color: isDark
+                    ? const Color(0x1FFFFFFF)
+                    : AppColors.borderOf(context).withValues(alpha: 0.8),
+                indent: 16 + safeArea.left,
+                endIndent: 16 + safeArea.right,
               ),
             ],
           ),
@@ -130,7 +148,7 @@ class NotesListSkeleton extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       itemCount: count,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       itemBuilder: (context, index) => const SkeletonCard(),
     );
   }

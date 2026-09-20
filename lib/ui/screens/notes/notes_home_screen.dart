@@ -192,11 +192,7 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
         children: [
           // 1. Content Feed & States (underneath translucent header)
           Positioned.fill(
-            child: SafeArea(
-              top: false,
-              bottom: false,
-              child: _buildContent(notesProvider, filteredNotes, headerHeight),
-            ),
+            child: _buildContent(notesProvider, filteredNotes, headerHeight),
           ),
 
           // 2. Translucent Frosted Glass Header (Avatar, Name, Email, Search Bar, Filter Chips)
@@ -246,10 +242,11 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
     required int studyCount,
   }) {
     final isDark = AppColors.isDark(context);
+    final safeArea = MediaQuery.paddingOf(context);
 
     return ClipRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () {}, // Blocks touches from bleeding through to note cards behind
@@ -257,15 +254,7 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
             decoration: BoxDecoration(
               // Perfectly matches scaffold background tone with frosted translucency
               color: AppColors.scaffoldBackgroundOf(context).withValues(
-                alpha: isDark ? 0.72 : 0.78,
-              ),
-              border: Border(
-                bottom: BorderSide(
-                  color: AppColors.borderOf(context).withValues(
-                    alpha: isDark ? 0.35 : 0.55,
-                  ),
-                  width: 1,
-                ),
+                alpha: isDark ? 0.60 : 0.66,
               ),
               boxShadow: [
                 BoxShadow(
@@ -277,14 +266,17 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
                 ),
               ],
             ),
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                     // Profile & Greeting Row (Avatar, Name, Email)
                     Row(
                       children: [
@@ -377,7 +369,7 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
                               )
                             : null,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide(
                             color: AppColors.borderOf(context).withValues(
                               alpha: isDark ? 0.35 : 0.60,
@@ -386,7 +378,7 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide(
                             color: AppColors.borderOf(context).withValues(
                               alpha: isDark ? 0.35 : 0.60,
@@ -395,7 +387,7 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(24),
                           borderSide: const BorderSide(
                             color: AppColors.primary,
                             width: 1.5,
@@ -464,10 +456,21 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
                 ),
               ),
             ),
-          ),
+            Divider(
+              height: 1,
+              thickness: 1,
+              color: AppColors.borderOf(context).withValues(
+                alpha: isDark ? 0.35 : 0.55,
+              ),
+              indent: 16 + safeArea.left,
+              endIndent: 16 + safeArea.right,
+            ),
+          ],
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _buildFilterChip({
@@ -639,9 +642,13 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
         );
       }
 
-      return Padding(
-        padding: EdgeInsets.only(top: headerHeight),
-        child: emptyWidget,
+      return SafeArea(
+        top: false,
+        bottom: false,
+        child: Padding(
+          padding: EdgeInsets.only(top: headerHeight),
+          child: emptyWidget,
+        ),
       );
     }
 
@@ -667,7 +674,7 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
       child: ListView.builder(
         controller: _scrollController,
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: EdgeInsets.fromLTRB(16, headerHeight + 8, 16, 80),
+        padding: EdgeInsets.only(top: headerHeight + 6, bottom: 80),
         itemCount: filteredNotes.length,
         itemBuilder: (context, index) {
           final note = filteredNotes[index];
@@ -679,6 +686,7 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
             showCategory: showCategory,
             isInsideFavoritesFilter:
                 notesProvider.currentFilter == NotesFilter.favorites,
+            showDivider: index < filteredNotes.length - 1,
             onTap: () => _openAddEditNote(note),
             onToggleFavorite: () => notesProvider.toggleFavorite(note),
             onDelete: () => _deleteNote(notesProvider, note),

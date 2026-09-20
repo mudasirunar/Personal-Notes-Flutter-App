@@ -13,6 +13,7 @@ class NoteCard extends StatefulWidget {
   final VoidCallback? onDelete;
   final bool showCategory;
   final bool isInsideFavoritesFilter;
+  final bool showDivider;
 
   const NoteCard({
     super.key,
@@ -22,6 +23,7 @@ class NoteCard extends StatefulWidget {
     this.onDelete,
     this.showCategory = true,
     this.isInsideFavoritesFilter = false,
+    this.showDivider = true,
   });
 
   @override
@@ -49,7 +51,7 @@ class _NoteCardState extends State<NoteCard>
     // Phase 1: Card smoothly swipes horizontally off-screen and fades
     _exitSlideAnimation = Tween<Offset>(
       begin: Offset.zero,
-      end: const Offset(-1.15, 0.0),
+      end: const Offset(-1.5, 0.0),
     ).animate(
       CurvedAnimation(
         parent: controller,
@@ -114,6 +116,7 @@ class _NoteCardState extends State<NoteCard>
   Widget build(BuildContext context) {
     _initExitController();
     final isDark = AppColors.isDark(context);
+    final safeArea = MediaQuery.paddingOf(context);
 
     Widget cardContent = Dismissible(
             key: ValueKey('dismissible_${widget.note.id}'),
@@ -129,10 +132,12 @@ class _NoteCardState extends State<NoteCard>
             background: _buildSwipeActionBackground(
               isFavorite: _frozenSwipeFavorite ?? widget.note.isFavorite,
               isLeading: true,
+              safeArea: safeArea,
             ),
             secondaryBackground: _buildSwipeActionBackground(
               isFavorite: _frozenSwipeFavorite ?? widget.note.isFavorite,
               isLeading: false,
+              safeArea: safeArea,
             ),
             confirmDismiss: (direction) async {
               if (direction == DismissDirection.startToEnd) {
@@ -182,101 +187,73 @@ class _NoteCardState extends State<NoteCard>
               }
             },
             child: Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              decoration: BoxDecoration(
-                color: AppColors.cardSurfaceOf(context),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isDark
-                      ? const Color(0x1FFFFFFF)
-                      : AppColors.border.withValues(alpha: 0.75),
-                  width: 1,
-                ),
-                boxShadow: isDark
-                    ? [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.35),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
+              color: AppColors.scaffoldBackgroundOf(context),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: widget.onTap,
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          16 + safeArea.left,
+                          12,
+                          16 + safeArea.right,
+                          12,
                         ),
-                      ]
-                    : [
-                        BoxShadow(
-                          color: const Color(0xFF64748B).withValues(alpha: 0.08),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(14),
-                child: InkWell(
-                  onTap: widget.onTap,
-                  borderRadius: BorderRadius.circular(14),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Top Row: Category chip & Favorite star button right beside it
-                        Row(
-                          children: [
-                            if (widget.showCategory) ...[
-                              CategoryBadge(category: widget.note.category),
-                              const SizedBox(width: 8),
-                            ],
-                            _FavoriteButton(
-                              isFavorite: widget.note.isFavorite,
-                              onPressed: _handleToggleFavorite,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Full-width Note Title
-                        Text(
-                          widget.note.title.isNotEmpty
-                              ? widget.note.title
-                              : 'Untitled Note',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: AppColors.textPrimaryOf(context),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.3,
-                            height: 1.25,
-                          ),
-                        ),
-
-                        // Full-width Note Content Preview (only rendered if present)
-                        if (widget.note.content.trim().isNotEmpty) ...[
-                          const SizedBox(height: 6),
-                          Text(
-                            widget.note.content.trim(),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: AppColors.textSecondaryOf(context),
-                              fontSize: 13.5,
-                              height: 1.35,
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 10),
-
-                        // Footer: Updated timestamp (minimal, uncluttered)
-                        Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.access_time_rounded,
-                              size: 12,
-                              color: AppColors.textMutedOf(context),
+                            // Top Row: Category chip & Favorite star button right beside it
+                            Row(
+                              children: [
+                                if (widget.showCategory) ...[
+                                  CategoryBadge(category: widget.note.category),
+                                  const SizedBox(width: 8),
+                                ],
+                                _FavoriteButton(
+                                  isFavorite: widget.note.isFavorite,
+                                  onPressed: _handleToggleFavorite,
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(height: 8),
+
+                            // Full-width Note Title
+                            Text(
+                              widget.note.title.isNotEmpty
+                                  ? widget.note.title
+                                  : 'Untitled Note',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: AppColors.textPrimaryOf(context),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.3,
+                                height: 1.25,
+                              ),
+                            ),
+
+                            // Full-width Note Content Preview (only rendered if present)
+                            if (widget.note.content.trim().isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                widget.note.content.trim(),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: AppColors.textSecondaryOf(context),
+                                  fontSize: 13.5,
+                                  height: 1.35,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 10),
+
+                            // Footer: Updated timestamp (minimal, uncluttered)
                             Text(
                               'Updated ${DateFormatter.formatNoteDate(widget.note.updatedAt)}',
                               style: TextStyle(
@@ -287,10 +264,20 @@ class _NoteCardState extends State<NoteCard>
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
+                  if (widget.showDivider)
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: isDark
+                          ? const Color(0x1FFFFFFF)
+                          : AppColors.borderOf(context).withValues(alpha: 0.8),
+                      indent: 16 + safeArea.left,
+                      endIndent: 16 + safeArea.right,
+                    ),
+                ],
               ),
             ),
           );
@@ -321,6 +308,7 @@ class _NoteCardState extends State<NoteCard>
   Widget _buildSwipeActionBackground({
     required bool isFavorite,
     required bool isLeading,
+    required EdgeInsets safeArea,
   }) {
     if (isLeading) {
       final bgColor =
@@ -330,11 +318,12 @@ class _NoteCardState extends State<NoteCard>
       final label = isFavorite ? 'Unfavorite' : 'Favorite';
 
       return Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: EdgeInsets.only(
+          left: 20 + safeArea.left,
+          right: 20,
+        ),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(14),
         ),
         alignment: Alignment.centerLeft,
         child: Row(
@@ -355,11 +344,12 @@ class _NoteCardState extends State<NoteCard>
       );
     } else {
       return Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        decoration: BoxDecoration(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20 + safeArea.right,
+        ),
+        decoration: const BoxDecoration(
           color: AppColors.swipeDelete,
-          borderRadius: BorderRadius.circular(14),
         ),
         alignment: Alignment.centerRight,
         child: const Row(

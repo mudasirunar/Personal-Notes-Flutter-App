@@ -159,6 +159,48 @@ void main() {
       expect(find.text('This note renders with dark theme colors'), findsOneWidget);
       expect(find.byIcon(Icons.star_border_rounded), findsOneWidget);
     });
+
+    testWidgets('renders horizontal divider when showDivider is true, hides when false', (tester) async {
+      final testNote = NoteModel(
+        id: 'note-divider-test',
+        title: 'Flat Note',
+        content: 'Testing divider visibility',
+        category: NoteCategory.work,
+        isFavorite: false,
+        createdAt: DateTime(2026, 9, 18, 10, 0),
+        updatedAt: DateTime(2026, 9, 18, 10, 0),
+      );
+
+      // 1. showDivider: true
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: NoteCard(
+              note: testNote,
+              showDivider: true,
+              onTap: () {},
+              onToggleFavorite: () {},
+            ),
+          ),
+        ),
+      );
+      expect(find.byType(Divider), findsOneWidget);
+
+      // 2. showDivider: false
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: NoteCard(
+              note: testNote,
+              showDivider: false,
+              onTap: () {},
+              onToggleFavorite: () {},
+            ),
+          ),
+        ),
+      );
+      expect(find.byType(Divider), findsNothing);
+    });
   });
 
   group('DeleteNoteDialog Widget Tests', () {
