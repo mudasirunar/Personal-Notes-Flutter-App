@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
@@ -192,6 +193,8 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
   Widget build(BuildContext context) {
     final notesProvider = context.watch<NotesProvider>();
     final isSaving = notesProvider.isSaving;
+    final isDark = AppColors.isDark(context);
+    final topPadding = MediaQuery.paddingOf(context).top;
 
     return PopScope(
       canPop: !_hasUnsavedChanges,
@@ -203,10 +206,34 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
         }
       },
       child: Scaffold(
+        extendBodyBehindAppBar: true,
         backgroundColor: AppColors.scaffoldBackgroundOf(context),
         appBar: AppBar(
-          backgroundColor: AppColors.scaffoldBackgroundOf(context),
+          backgroundColor: Colors.transparent,
           elevation: 0,
+          scrolledUnderElevation: 0,
+          flexibleSpace: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              child: Container(
+                decoration: BoxDecoration(
+                  // Perfectly matches scaffold background tone with frosted translucency
+                  color: AppColors.scaffoldBackgroundOf(context).withValues(
+                    alpha: isDark ? 0.60 : 0.66,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(
+                        alpha: isDark ? 0.15 : 0.03,
+                      ),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
             onPressed: () async {
@@ -264,13 +291,19 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
           ],
         ),
         body: SafeArea(
+          top: false,
           child: Form(
             key: _formKey,
             child: Column(
               children: [
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      topPadding + kToolbarHeight + 12,
+                      20,
+                      12,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -301,54 +334,113 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                             );
                           }).toList(),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 14),
+                        Divider(
+                          height: 1,
+                          thickness: 0.5,
+                          color: AppColors.borderOf(context),
+                        ),
+                        const SizedBox(height: 14),
 
-                        // Title Input
+                        // Title Input (Flat Keep Style)
                         TextFormField(
                           controller: _titleController,
                           autofocus: !widget.isEditing,
                           maxLength: AppConstants.maxTitleLength,
                           validator: Validators.validateNoteTitle,
+                          minLines: 1,
+                          maxLines: null,
+                          keyboardType: TextInputType.multiline,
                           textInputAction: TextInputAction.next,
                           style: TextStyle(
                             color: AppColors.textPrimaryOf(context),
-                            fontSize: 18,
+                            fontSize: 20,
                             fontWeight: FontWeight.w700,
                             letterSpacing: -0.2,
+                            height: 1.35,
                           ),
+                          buildCounter: (
+                            context, {
+                            required currentLength,
+                            required isFocused,
+                            maxLength,
+                          }) {
+                            if (maxLength != null && currentLength >= maxLength) {
+                              return Text(
+                                '$currentLength/$maxLength',
+                                style: TextStyle(
+                                  color: AppColors.errorOf(context),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              );
+                            }
+                            return null;
+                          },
                           decoration: InputDecoration(
-                            labelText: 'Title',
-                            hintText: 'e.g. Weekly Planning, Grocery List',
-                            alignLabelWithHint: true,
-                            counterStyle: TextStyle(
+                            hintText: 'Title',
+                            hintStyle: TextStyle(
                               color: AppColors.textMutedOf(context),
-                              fontSize: 11,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
                             ),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            errorBorder: InputBorder.none,
+                            focusedErrorBorder: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                            filled: false,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
 
-                        // Content Input
+                        // Content Input (Flat Keep Style)
                         TextFormField(
                           controller: _contentController,
                           maxLength: AppConstants.maxContentLength,
                           validator: Validators.validateNoteContent,
-                          minLines: 8,
+                          minLines: 10,
                           maxLines: null,
                           keyboardType: TextInputType.multiline,
                           style: TextStyle(
                             color: AppColors.textPrimaryOf(context),
-                            fontSize: 14.5,
+                            fontSize: 15,
                             height: 1.5,
                           ),
+                          buildCounter: (
+                            context, {
+                            required currentLength,
+                            required isFocused,
+                            maxLength,
+                          }) {
+                            if (maxLength != null && currentLength >= maxLength) {
+                              return Text(
+                                '$currentLength/$maxLength',
+                                style: TextStyle(
+                                  color: AppColors.errorOf(context),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              );
+                            }
+                            return null;
+                          },
                           decoration: InputDecoration(
-                            labelText: 'Note Content',
-                            hintText: 'Write down your thoughts, tasks, or notes...',
-                            alignLabelWithHint: true,
-                            counterStyle: TextStyle(
+                            hintText: 'Note',
+                            hintStyle: TextStyle(
                               color: AppColors.textMutedOf(context),
-                              fontSize: 11,
+                              fontSize: 15,
+                              height: 1.5,
                             ),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            errorBorder: InputBorder.none,
+                            focusedErrorBorder: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                            filled: false,
                           ),
                         ),
                         const SizedBox(height: 24),

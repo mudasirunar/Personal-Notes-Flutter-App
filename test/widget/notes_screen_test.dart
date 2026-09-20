@@ -803,8 +803,27 @@ void main() {
 
       expect(find.text('New Note'), findsOneWidget);
       expect(find.text('Title'), findsOneWidget);
-      expect(find.text('Note Content'), findsOneWidget);
+      expect(find.text('Note'), findsOneWidget);
       expect(find.text('Create Note'), findsOneWidget);
+    });
+
+    testWidgets('character counter is hidden under limit and shows only when max limit reached', (tester) async {
+      await tester.pumpWidget(createTestWidget(const AddEditNoteScreen()));
+
+      // Under limit: no counter shown
+      expect(find.text('0/80'), findsNothing);
+      expect(find.text('0/2000'), findsNothing);
+
+      // Enter text under 80 chars
+      await tester.enterText(find.widgetWithText(TextFormField, 'Title'), 'Short title');
+      await tester.pump();
+      expect(find.text('11/80'), findsNothing);
+
+      // Enter text reaching 80 chars
+      final maxTitle = 'A' * AppConstants.maxTitleLength;
+      await tester.enterText(find.widgetWithText(TextFormField, 'Title'), maxTitle);
+      await tester.pump();
+      expect(find.text('80/80'), findsOneWidget);
     });
 
     testWidgets('validates empty title on submission', (tester) async {
