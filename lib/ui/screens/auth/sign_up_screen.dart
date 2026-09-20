@@ -319,33 +319,36 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                                   // ── Back to Login ──
                                   Center(
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          'Already have an account? ',
-                                          style: TextStyle(
-                                            color: AppColors.textSecondaryOf(
-                                              context,
-                                            ),
-                                            fontSize: 13.5,
-                                          ),
-                                        ),
-                                        GestureDetector(
-                                          onTap: () {
-                                            authProvider.clearError();
-                                            Navigator.of(context).pop();
-                                          },
-                                          child: Text(
-                                            'Sign In',
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            'Already have an account? ',
                                             style: TextStyle(
-                                              color: primaryColor,
+                                              color: AppColors.textSecondaryOf(
+                                                context,
+                                              ),
                                               fontSize: 13.5,
-                                              fontWeight: FontWeight.w600,
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                          GestureDetector(
+                                            onTap: () {
+                                              authProvider.clearError();
+                                              Navigator.of(context).pop();
+                                            },
+                                            child: Text(
+                                              'Sign In',
+                                              style: TextStyle(
+                                                color: primaryColor,
+                                                fontSize: 13.5,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],

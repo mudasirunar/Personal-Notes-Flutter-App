@@ -5,6 +5,8 @@ import 'package:personal_notes_app/data/services/auth_service.dart';
 import 'package:personal_notes_app/providers/auth_provider.dart';
 import 'package:personal_notes_app/ui/screens/auth/forgot_password_screen.dart';
 import 'package:personal_notes_app/ui/screens/auth/login_screen.dart';
+import 'package:personal_notes_app/ui/screens/auth/otp_verification_screen.dart';
+import 'package:personal_notes_app/ui/screens/auth/set_new_password_screen.dart';
 import 'package:personal_notes_app/ui/screens/auth/sign_up_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -49,15 +51,21 @@ void main() {
       expect(find.text('Welcome Back'), findsOneWidget);
       expect(find.text('Email'), findsOneWidget);
       expect(find.text('Password'), findsOneWidget);
-      expect(find.text('Forgot password?'), findsOneWidget);
-      expect(find.text('Sign In'), findsOneWidget);
-      expect(find.text('Sign Up'), findsOneWidget);
+      expect(find.text('Forget Password?'), findsOneWidget);
+      expect(find.text('Sign in'), findsOneWidget);
+      expect(find.text('Signup'), findsOneWidget);
     });
 
     testWidgets('SignUpScreen renders full name, email, password, confirm password fields', (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(createAuthTestWidget(const SignUpScreen()));
 
-      expect(find.text('Create Account'), findsNWidgets(2)); // Title and Button
+      expect(find.text('Create Account'), findsOneWidget); // Title
+      expect(find.text('Sign up'), findsOneWidget); // Button
       expect(find.text('Full Name'), findsOneWidget);
       expect(find.text('Email'), findsOneWidget);
       expect(find.text('Password'), findsOneWidget);
@@ -69,8 +77,38 @@ void main() {
 
       expect(find.text('Reset Password'), findsOneWidget);
       expect(find.text('Email'), findsOneWidget);
-      expect(find.text('Send Reset Link'), findsOneWidget);
+      expect(find.text('Send Verification Code'), findsOneWidget);
       expect(find.text('Back to Sign In'), findsOneWidget);
+    });
+
+    testWidgets('OtpVerificationScreen renders 6-digit fields and countdown timer', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: OtpVerificationScreen(
+            email: 'test@example.com',
+            initialOtp: '123456',
+          ),
+        ),
+      );
+
+      expect(find.text('Verification Code'), findsOneWidget);
+      expect(find.text('test@example.com'), findsOneWidget);
+      expect(find.byType(TextField), findsNWidgets(6));
+      expect(find.text('Verify Code'), findsOneWidget);
+      expect(find.textContaining('Resend code in'), findsOneWidget);
+    });
+
+    testWidgets('SetNewPasswordScreen renders new password and confirm password fields', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: SetNewPasswordScreen(email: 'test@example.com'),
+        ),
+      );
+
+      expect(find.text('Set New Password'), findsOneWidget);
+      expect(find.text('New Password'), findsOneWidget);
+      expect(find.text('Confirm New Password'), findsOneWidget);
+      expect(find.text('Update Password'), findsOneWidget);
     });
   });
 }

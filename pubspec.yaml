@@ -20,6 +20,7 @@ dependencies:
   provider: ^6.1.5+1
   intl: ^0.20.3
   firebase_analytics: ^12.6.0
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:

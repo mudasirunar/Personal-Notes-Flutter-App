@@ -1,0 +1,15 @@
+{
+  "name": "personal-notes-backend",
+  "version": "1.0.0",
+  "description": "Serverless backend for Personal Notes App password management with Firebase Admin SDK",
+  "main": "api/reset-password.js",
+  "scripts": {
+    "start": "node api/reset-password.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.1.0"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}
