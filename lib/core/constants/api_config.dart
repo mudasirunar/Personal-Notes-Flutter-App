@@ -23,10 +23,10 @@ class ApiConfig {
   static const String brevoReplyToEmail = 'support@personalnotes.app';
 
   /// Your deployed Vercel serverless function URL
-  /// Example: https://personal-notes-backend.vercel.app/api/reset-password
   static const String backendResetPasswordUrl = String.fromEnvironment(
     'BACKEND_RESET_PASSWORD_URL',
-    defaultValue: 'https://personal-notes-backend.vercel.app/api/reset-password',
+    defaultValue:
+        'https://personal-notes-flutter-app.vercel.app/api/reset-password',
   );
 
   /// Shared secret token matching RESET_SECRET_TOKEN in backend environment
