@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/constants/app_colors.dart';
@@ -10,7 +11,7 @@ class NoteCard extends StatefulWidget {
   final NoteModel note;
   final VoidCallback onTap;
   final VoidCallback onToggleFavorite;
-  final VoidCallback? onDelete;
+  final FutureOr<dynamic> Function()? onDelete;
   final bool showCategory;
   final bool isInsideFavoritesFilter;
   final bool showDivider;
@@ -39,6 +40,7 @@ class _NoteCardState extends State<NoteCard>
 
   // Holds frozen favorite status during swipe snap-back to prevent background color glitch
   bool? _frozenSwipeFavorite;
+  bool _deleteExecuted = false;
 
   void _initExitController() {
     if (_exitController != null) return;
@@ -166,10 +168,17 @@ class _NoteCardState extends State<NoteCard>
 
                 return false; // Snap back smoothly; do not dismiss card
               } else if (direction == DismissDirection.endToStart) {
-                // Swipe to delete -> prompt confirmation dialog
+                // Swipe to delete -> prompt confirmation dialog with active loader
+                _deleteExecuted = false;
                 final confirmed = await DeleteNoteDialog.show(
                   context,
                   noteTitle: widget.note.title,
+                  onDelete: widget.onDelete != null
+                      ? () async {
+                          _deleteExecuted = true;
+                          return await widget.onDelete!();
+                        }
+                      : null,
                 );
                 // Returning true triggers Dismissible's smooth horizontal slide-out
                 // and vertical height collapse before onDismissed is called
@@ -178,8 +187,10 @@ class _NoteCardState extends State<NoteCard>
               return false;
             },
             onDismissed: (direction) {
-              if (direction == DismissDirection.endToStart && widget.onDelete != null) {
-                widget.onDelete!();
+              if (direction == DismissDirection.endToStart) {
+                if (!_deleteExecuted && widget.onDelete != null) {
+                  widget.onDelete!();
+                }
               } else if (direction == DismissDirection.startToEnd &&
                   widget.isInsideFavoritesFilter &&
                   widget.note.isFavorite) {

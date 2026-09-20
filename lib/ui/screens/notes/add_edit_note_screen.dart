@@ -28,25 +28,57 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
   late final TextEditingController _contentController;
   late NoteCategory _selectedCategory;
   late bool _isFavorite;
-  bool _isDirty = false;
+
+  late final String _initialTitle;
+  late final String _initialContent;
+  late final NoteCategory _initialCategory;
+  late final bool _initialFavorite;
+
+  bool _lastHasUnsavedChanges = false;
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.note?.title ?? '');
-    _contentController = TextEditingController(text: widget.note?.content ?? '');
-    _selectedCategory =
+    _initialTitle = widget.note?.title ?? '';
+    _initialContent = widget.note?.content ?? '';
+    _initialCategory =
         widget.note?.category ?? widget.initialCategory ?? NoteCategory.personal;
-    _isFavorite = widget.note?.isFavorite ?? false;
+    _initialFavorite = widget.note?.isFavorite ?? false;
 
-    _titleController.addListener(_markDirty);
-    _contentController.addListener(_markDirty);
+    _titleController = TextEditingController(text: _initialTitle);
+    _contentController = TextEditingController(text: _initialContent);
+    _selectedCategory = _initialCategory;
+    _isFavorite = _initialFavorite;
+
+    _titleController.addListener(_checkChanges);
+    _contentController.addListener(_checkChanges);
   }
 
-  void _markDirty() {
-    if (!_isDirty) {
-      setState(() => _isDirty = true);
+  void _checkChanges() {
+    final hasChanges = _hasUnsavedChanges;
+    if (hasChanges != _lastHasUnsavedChanges) {
+      setState(() {
+        _lastHasUnsavedChanges = hasChanges;
+      });
     }
+  }
+
+  bool get _hasUnsavedChanges {
+    final currentTitle = _titleController.text.trim();
+    final initialTitle = _initialTitle.trim();
+
+    final currentContent = _contentController.text.trim();
+    final initialContent = _initialContent.trim();
+
+    final isTitleChanged = currentTitle != initialTitle;
+    final isContentChanged = currentContent != initialContent;
+    final isCategoryChanged = _selectedCategory != _initialCategory;
+    final isFavoriteChanged = _isFavorite != _initialFavorite;
+
+    return isTitleChanged ||
+        isContentChanged ||
+        isCategoryChanged ||
+        isFavoriteChanged;
   }
 
   @override
@@ -105,33 +137,44 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
   Future<void> _handleDelete() async {
     if (!widget.isEditing) return;
 
+    final notesProvider = context.read<NotesProvider>();
+    String? deleteError;
+
     final confirmed = await DeleteNoteDialog.show(
       context,
       noteTitle: widget.note!.title,
+      onDelete: () async {
+        deleteError = await notesProvider.deleteNote(widget.note!.id);
+        return deleteError == null;
+      },
     );
 
-    if (confirmed && mounted) {
-      final notesProvider = context.read<NotesProvider>();
-      final error = await notesProvider.deleteNote(widget.note!.id);
+    if (!mounted) return;
 
-      if (!mounted) return;
-
-      if (error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error),
-            backgroundColor: AppColors.errorOf(context),
-            behavior: SnackBarBehavior.floating,
+    if (deleteError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(deleteError!),
+          backgroundColor: AppColors.errorOf(context),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } else if (confirmed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Note "${widget.note!.title.isNotEmpty ? widget.note!.title : 'Untitled'}" deleted',
           ),
-        );
-      } else {
-        Navigator.of(context).pop();
-      }
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      Navigator.of(context).pop();
     }
   }
 
   Future<bool> _onWillPop() async {
-    if (!_isDirty) return true;
+    if (!_hasUnsavedChanges) return true;
 
     final discardConfirmed = await ConfirmDialog.show(
       context,
@@ -151,7 +194,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
     final isSaving = notesProvider.isSaving;
 
     return PopScope(
-      canPop: !_isDirty,
+      canPop: !_hasUnsavedChanges,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
         final shouldPop = await _onWillPop();
@@ -167,6 +210,10 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
             onPressed: () async {
+              if (!_hasUnsavedChanges) {
+                Navigator.of(context).pop();
+                return;
+              }
               final shouldPop = await _onWillPop();
               if (shouldPop && context.mounted) {
                 Navigator.of(context).pop();
@@ -197,7 +244,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
               onPressed: () {
                 setState(() {
                   _isFavorite = !_isFavorite;
-                  _isDirty = true;
+                  _lastHasUnsavedChanges = _hasUnsavedChanges;
                 });
               },
             ),
@@ -217,7 +264,6 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
           ],
         ),
         body: SafeArea(
-          bottom: false,
           child: Form(
             key: _formKey,
             child: Column(
@@ -249,7 +295,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                               onTap: () {
                                 setState(() {
                                   _selectedCategory = cat;
-                                  _isDirty = true;
+                                  _lastHasUnsavedChanges = _hasUnsavedChanges;
                                 });
                               },
                             );
@@ -260,6 +306,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                         // Title Input
                         TextFormField(
                           controller: _titleController,
+                          autofocus: !widget.isEditing,
                           maxLength: AppConstants.maxTitleLength,
                           validator: Validators.validateNoteTitle,
                           textInputAction: TextInputAction.next,
@@ -310,22 +357,12 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                   ),
                 ),
 
-                // Save Action Bar at the bottom
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.cardSurfaceOf(context),
-                    border: Border(
-                      top: BorderSide(
-                        color: AppColors.borderOf(context),
-                        width: 1,
-                      ),
-                    ),
-                  ),
+                // Save Action Button at the bottom
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
                   child: PrimaryButton(
                     label: widget.isEditing ? 'Save Changes' : 'Create Note',
                     isLoading: isSaving,
-                    icon: Icons.check_rounded,
                     onPressed: _handleSave,
                   ),
                 ),

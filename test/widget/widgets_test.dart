@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_notes_app/core/constants/app_constants.dart';
@@ -279,6 +280,92 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(result, isFalse);
+    });
+
+    testWidgets('shows loader on delete button, disables cancel, and blocks pop while deleting', (tester) async {
+      final completer = Completer<void>();
+      bool? result;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () async {
+                  result = await DeleteNoteDialog.show(
+                    context,
+                    noteTitle: 'Important Note',
+                    onDelete: () => completer.future,
+                  );
+                },
+                child: const Text('Open Dialog'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open Dialog'));
+      await tester.pumpAndSettle();
+
+      // Before tapping delete: Cancel is enabled, no loader
+      final cancelFinder = find.widgetWithText(TextButton, 'Cancel');
+      expect(tester.widget<TextButton>(cancelFinder).onPressed, isNotNull);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+
+      // Tap Delete to initiate deletion
+      await tester.tap(find.text('Delete'));
+      await tester.pump(); // Triggers setState and rebuilds with _isLoading = true
+
+      // During deletion:
+      // 1. Loader is shown
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      // 2. Cancel button is disabled
+      expect(tester.widget<TextButton>(cancelFinder).onPressed, isNull);
+      // 3. PopScope prevents dismissing
+      final popScope = tester.widget<PopScope>(find.byType(PopScope));
+      expect(popScope.canPop, isFalse);
+
+      // Now complete the remote deletion
+      completer.complete();
+      await tester.pumpAndSettle();
+
+      // Dialog closed with success
+      expect(result, isTrue);
+      expect(find.text('Delete Note'), findsNothing);
+    });
+
+    testWidgets('returns false when onDelete returns error', (tester) async {
+      bool? result;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () async {
+                  result = await DeleteNoteDialog.show(
+                    context,
+                    noteTitle: 'Note With Error',
+                    onDelete: () async => 'Network failed',
+                  );
+                },
+                child: const Text('Open Dialog'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open Dialog'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      // Deletion failed, so result is false
+      expect(result, isFalse);
+      expect(find.text('Delete Note'), findsNothing);
     });
   });
 }

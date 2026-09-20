@@ -56,72 +56,76 @@ class ConfirmDialog extends StatelessWidget {
         ? (isDark ? AppColors.errorDark : AppColors.error)
         : (isDark ? AppColors.accent : AppColors.primary);
 
-    return AlertDialog(
-      scrollable: true,
-      insetPadding: EdgeInsets.symmetric(
-        horizontal: 24,
-        vertical: isLandscape ? 12 : 24,
-      ),
-      backgroundColor: AppColors.cardSurfaceOf(context),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: AppColors.borderOf(context), width: 1),
-      ),
-      title: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 380),
-        child: Text(
-          title,
-          style: TextStyle(
-            color: AppColors.textPrimaryOf(context),
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-          ),
+    return PopScope(
+      canPop: !isLoading,
+      child: AlertDialog(
+        scrollable: true,
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: 24,
+          vertical: isLandscape ? 12 : 24,
         ),
-      ),
-      content: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 380),
-        child: Text(
-          message,
-          style: TextStyle(
-            color: AppColors.textSecondaryOf(context),
-            fontSize: 14,
-            height: 1.4,
-          ),
+        backgroundColor: AppColors.cardSurfaceOf(context),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: AppColors.borderOf(context), width: 1),
         ),
-      ),
-      actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      actions: [
-        TextButton(
-          onPressed: isLoading ? null : () => Navigator.of(context).pop(false),
-          style: TextButton.styleFrom(
-            foregroundColor: AppColors.textSecondaryOf(context),
-          ),
-          child: Text(cancelLabel),
-        ),
-        ElevatedButton(
-          onPressed: isLoading ? null : onConfirm,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: confirmBgColor,
-            disabledBackgroundColor: confirmBgColor.withValues(alpha: 0.65),
-            foregroundColor: Colors.white,
-            minimumSize: const Size(88, 40),
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+        title: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 380),
+          child: Text(
+            title,
+            style: TextStyle(
+              color: AppColors.textPrimaryOf(context),
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          child: isLoading
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : Text(confirmLabel),
         ),
-      ],
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 380),
+          child: Text(
+            message,
+            style: TextStyle(
+              color: AppColors.textSecondaryOf(context),
+              fontSize: 14,
+              height: 1.4,
+            ),
+          ),
+        ),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        actions: [
+          TextButton(
+            onPressed: isLoading ? null : () => Navigator.of(context).pop(false),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.textSecondaryOf(context),
+            ),
+            child: Text(cancelLabel),
+          ),
+          ElevatedButton(
+            onPressed: isLoading ? null : onConfirm,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: confirmBgColor,
+              disabledBackgroundColor: confirmBgColor.withValues(alpha: 0.7),
+              foregroundColor: Colors.white,
+              disabledForegroundColor: Colors.white,
+              minimumSize: const Size(88, 40),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: isLoading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : Text(confirmLabel),
+          ),
+        ],
+      ),
     );
   }
 }

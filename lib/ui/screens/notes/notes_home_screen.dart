@@ -64,7 +64,7 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
     );
   }
 
-  Future<void> _deleteNote(NotesProvider notesProvider, NoteModel note) async {
+  Future<String?> _deleteNote(NotesProvider notesProvider, NoteModel note) async {
     final error = await notesProvider.deleteNote(note.id);
     if (mounted) {
       if (error != null) {
@@ -85,6 +85,7 @@ class _NotesHomeScreenState extends State<NotesHomeScreen> {
         );
       }
     }
+    return error;
   }
 
   NoteCategory? _getPreselectedCategory(NotesFilter filter) {

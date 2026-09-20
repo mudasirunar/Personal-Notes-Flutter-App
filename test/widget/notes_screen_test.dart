@@ -846,5 +846,134 @@ void main() {
       );
       expect(workBadge.isSelected, isTrue);
     });
+
+    testWidgets('autofocuses title in create mode, does not in edit mode', (tester) async {
+      // 1. Create mode -> autofocus: true
+      await tester.pumpWidget(createTestWidget(const AddEditNoteScreen()));
+      final createTextField = tester.widget<TextField>(
+        find.descendant(of: find.widgetWithText(TextFormField, 'Title'), matching: find.byType(TextField)),
+      );
+      expect(createTextField.autofocus, isTrue);
+
+      // 2. Edit mode -> autofocus: false
+      final noteToEdit = NoteModel(
+        id: 'edit-auto-focus',
+        title: 'Title to Edit',
+        content: 'Content',
+        category: NoteCategory.personal,
+        isFavorite: false,
+        createdAt: DateTime(2026, 9, 18, 10, 0),
+        updatedAt: DateTime(2026, 9, 18, 10, 0),
+      );
+      await tester.pumpWidget(createTestWidget(AddEditNoteScreen(note: noteToEdit)));
+      final editTextField = tester.widget<TextField>(
+        find.descendant(of: find.widgetWithText(TextFormField, 'Title'), matching: find.byType(TextField)),
+      );
+      expect(editTextField.autofocus, isFalse);
+    });
+
+    testWidgets('change detection does not prompt discard dialog if no changes were made', (tester) async {
+      final note = NoteModel(
+        id: 'test-discard-1',
+        title: 'Untouched Title',
+        content: 'Untouched Content',
+        category: NoteCategory.personal,
+        isFavorite: false,
+        createdAt: DateTime(2026, 9, 18, 10, 0),
+        updatedAt: DateTime(2026, 9, 18, 10, 0),
+      );
+
+      await tester.pumpWidget(createTestWidget(AddEditNoteScreen(note: note)));
+      await tester.pumpAndSettle();
+
+      // Tap back button with zero changes
+      await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
+      await tester.pumpAndSettle();
+
+      // No discard dialog should appear
+      expect(find.text('Discard Changes?'), findsNothing);
+    });
+
+    testWidgets('change detection prompts discard dialog when modified, but allows pop when reverted', (tester) async {
+      final note = NoteModel(
+        id: 'test-discard-2',
+        title: 'Original Title',
+        content: 'Original Content',
+        category: NoteCategory.personal,
+        isFavorite: false,
+        createdAt: DateTime(2026, 9, 18, 10, 0),
+        updatedAt: DateTime(2026, 9, 18, 10, 0),
+      );
+
+      await tester.pumpWidget(createTestWidget(AddEditNoteScreen(note: note)));
+      await tester.pumpAndSettle();
+
+      // 1. Modify title -> changes exist
+      await tester.enterText(find.widgetWithText(TextFormField, 'Original Title'), 'Modified Title');
+      await tester.pumpAndSettle();
+
+      // Tap back button -> ConfirmDialog should appear
+      await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
+      await tester.pumpAndSettle();
+      expect(find.text('Discard Changes?'), findsOneWidget);
+
+      // Tap 'Keep Editing'
+      await tester.tap(find.text('Keep Editing'));
+      await tester.pumpAndSettle();
+      expect(find.text('Discard Changes?'), findsNothing);
+
+      // 2. Revert title back to 'Original Title'
+      await tester.enterText(find.widgetWithText(TextFormField, 'Modified Title'), 'Original Title');
+      await tester.pumpAndSettle();
+
+      // Tap back button -> No dialog, pops cleanly
+      await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
+      await tester.pumpAndSettle();
+      expect(find.text('Discard Changes?'), findsNothing);
+    });
+
+    testWidgets('tapping delete button in edit mode confirms deletion with dialog loader and pops screen', (tester) async {
+      final note = NoteModel(
+        id: 'note-to-delete-from-edit',
+        title: 'Delete From Edit Screen',
+        content: 'Content here',
+        category: NoteCategory.work,
+        isFavorite: false,
+        createdAt: DateTime(2026, 9, 18, 10, 0),
+        updatedAt: DateTime(2026, 9, 18, 10, 0),
+      );
+
+      fakeNotesService.emit([note]);
+
+      await tester.pumpWidget(createTestWidget(AddEditNoteScreen(note: note)));
+      await tester.pumpAndSettle();
+
+      // Verify delete button is present in AppBar
+      expect(find.byIcon(Icons.delete_outline_rounded), findsOneWidget);
+
+      // Tap delete button
+      await tester.tap(find.byIcon(Icons.delete_outline_rounded));
+      await tester.pumpAndSettle();
+
+      // DeleteNoteDialog should appear
+      expect(find.text('Delete Note'), findsOneWidget);
+      expect(
+        find.text('Are you sure you want to delete "Delete From Edit Screen"? This action cannot be undone.'),
+        findsOneWidget,
+      );
+
+      // Tap Confirm 'Delete'
+      final dialogDeleteButton = find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Delete'),
+      );
+      await tester.tap(dialogDeleteButton);
+      await tester.pumpAndSettle();
+
+      // Verify note is deleted from fake service
+      expect(fakeNotesService.notes.where((n) => n.id == note.id), isEmpty);
+      // Dialog is gone
+      expect(find.text('Delete Note'), findsNothing);
+    });
   });
 }
